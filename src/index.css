@@ -2,7 +2,93 @@
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
-  background-color: #f3f4f6;
+  background-color: #050505;
+  color: white;
+  overflow-x: hidden;
+}
+
+/* --- BACKGROUND BLOBS --- */
+@keyframes blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+.animate-blob {
+  animation: blob 10s infinite;
+}
+
+.animation-delay-2000 { animation-delay: 2s; }
+.animation-delay-4000 { animation-delay: 4s; }
+
+/* --- SATISFYING BUTTON ANIMATIONS --- */
+@keyframes shimmer {
+  0% { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px -5px rgba(34, 197, 94, 0.3); }
+  50% { box-shadow: 0 0 40px -5px rgba(34, 197, 94, 0.6); }
+}
+
+/* --- TIMER PENALTY ANIMATION --- */
+@keyframes time-penalty {
+  0% { color: white; transform: scale(1); }
+  20% { color: #ef4444; transform: scale(1.5) rotate(-5deg); } /* Red Flash */
+  40% { transform: scale(1.2) rotate(5deg); }
+  60% { transform: scale(1.1); }
+  100% { color: white; transform: scale(1); }
+}
+
+.animate-penalty {
+  animation: time-penalty 0.6s ease-out;
+}
+
+/* --- UI COMPONENTS --- */
+.glass-panel {
+  @apply bg-black/60 backdrop-blur-xl border border-white/5 shadow-2xl;
+}
+
+.glass-input {
+  @apply bg-white/5 border border-white/10 text-white placeholder-gray-500 
+         focus:border-green-500/50 focus:bg-white/10 focus:outline-none transition-all;
+}
+
+/* The "Satisfying" Start Button */
+.btn-satisfying {
+  @apply relative overflow-hidden rounded-full font-black tracking-widest text-white uppercase transition-all duration-300 transform;
+  background: linear-gradient(90deg, #16a34a, #2563eb, #16a34a);
+  background-size: 200% auto;
+  animation: shimmer 3s linear infinite;
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
+}
+
+.btn-satisfying:hover {
+  @apply scale-105;
+  box-shadow: 0 0 50px rgba(34, 197, 94, 0.8);
+  animation-duration: 1.5s; /* Speed up shimmer on hover */
+}
+
+.btn-satisfying:active {
+  @apply scale-95;
+}
+
+/* Standard Glass Button */
+.glass-button {
+  @apply bg-white/5 border border-white/10 backdrop-blur-sm text-white font-bold tracking-widest
+         hover:bg-white/10 hover:border-white/20 active:bg-black/20 transition-all shadow-lg;
+}
+
+.glass-button-primary {
+  @apply bg-green-500/20 border border-green-500/30 text-green-400 
+         hover:bg-green-500/30 hover:border-green-500/50 hover:text-white hover:shadow-green-500/20;
+}
+
+.glass-button-danger {
+  @apply bg-red-500/10 border border-red-500/20 text-red-400 
+         hover:bg-red-500/20 hover:border-red-500/40 hover:text-white;
 }
