@@ -1,5 +1,10 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+
+if (typeof global === 'undefined') {
+  window.global = window;
+}
+
 import App from './App.jsx'
 import './index.css'
 import { HashRouter } from 'react-router-dom' // Changed from BrowserRouter

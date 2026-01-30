@@ -23,7 +23,7 @@ function Lobby() {
   const [name, setName] = useState("");
   const [showSettings, setShowSettings] = useState(true);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
-  const [copied, setCopied] = useState(false); // For Copy Feedback
+  const [copied, setCopied] = useState(false); 
 
   usePresence(roomId, auth.currentUser?.uid);
 
@@ -110,8 +110,11 @@ function Lobby() {
     updates[`rooms/${roomId}/playerOrder`] = order;
     updates[`rooms/${roomId}/books`] = initialBooks;
     
+    // FIX: Set timerEnd timestamp if dynamic, otherwise clear it
     if (settings.timerMode === "DYNAMIC") {
-        updates[`rooms/${roomId}/timer`] = settings.baseTime || 60;
+        updates[`rooms/${roomId}/timerEnd`] = Date.now() + ((settings.baseTime || 60) * 1000);
+    } else {
+        updates[`rooms/${roomId}/timerEnd`] = null;
     }
 
     await update(ref(db), updates);
@@ -153,42 +156,27 @@ function Lobby() {
     <div className="min-h-screen p-8 flex flex-col items-center">
       <div className="max-w-5xl w-full">
         
-        {/* --- HEADER (Copy Link Added) --- */}
         <div className="text-center mb-12">
           <div className="inline-block glass-panel px-6 py-2 rounded-full mb-4">
             <span className="text-xs font-bold text-gray-500 tracking-[0.3em]">LOBBY</span>
           </div>
           
-          <div 
-             className="relative inline-block group cursor-pointer"
-             onClick={copyLink}
-          >
+          <div className="relative inline-block group cursor-pointer" onClick={copyLink}>
               <h1 className="text-7xl font-black text-white tracking-tighter drop-shadow-2xl transition-all group-hover:text-green-400">
                   {roomId}
               </h1>
-              
-              {/* Sliding Copy Button */}
               <div className="absolute top-0 -right-12 h-full flex items-center opacity-0 transform -translate-x-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
                   <div className="bg-white/10 p-2 rounded-lg backdrop-blur-md border border-white/20">
-                      {copied ? (
-                          <span className="text-green-400 font-bold text-xs">COPIED</span>
-                      ) : (
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                          </svg>
-                      )}
+                      {copied ? <span className="text-green-400 font-bold text-xs">COPIED</span> : <span className="text-white text-xs">COPY</span>}
                   </div>
-              </div>
-              <div className="text-xs text-gray-500 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  Click code to copy link
               </div>
           </div>
         </div>
 
-        {/* Players Grid */}
+        {/* FIX: Unique Key Error fixed here with (player.id || index) */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
-          {players.map((player) => (
-            <div key={player.id} className={`glass-panel p-6 rounded-2xl flex flex-col items-center transition-all relative group ${player.presence?.state === 'offline' ? 'opacity-50 border-red-500/30' : 'hover:bg-white/5'}`}>
+          {players.map((player, index) => (
+            <div key={player.id || index} className={`glass-panel p-6 rounded-2xl flex flex-col items-center transition-all relative group ${player.presence?.state === 'offline' ? 'opacity-50 border-red-500/30' : 'hover:bg-white/5'}`}>
               
               {isHost && player.id !== currentUser.uid && (
                 <button 
@@ -212,7 +200,7 @@ function Lobby() {
           ))}
         </div>
 
-        {/* --- GAME SETTINGS --- */}
+        {/* SETTINGS PANEL */}
         <div className="glass-panel rounded-2xl mb-12 max-w-3xl mx-auto text-left relative overflow-hidden transition-all duration-300">
             <div 
                 onClick={() => setShowSettings(!showSettings)}
@@ -273,7 +261,6 @@ function Lobby() {
             </div>
         </div>
 
-        {/* --- SATISFYING START BUTTON --- */}
         <div className="text-center pb-20">
           {isHost ? (
             <button 
