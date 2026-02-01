@@ -4,7 +4,12 @@ import { db, auth } from '../firebase';
 import { ref, onValue, set, update, remove } from 'firebase/database';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import Game from './Game';
+import Gallery from './Gallery';
 import { usePresence } from '../hooks/usePresence';
+import { Settings, ChevronUp, Copy, Check } from 'lucide-react';
+import PlayerOrbit from '../components/PlayerOrbit';
+import StartButton from '../components/StartButton';
+import SettingsDeck from '../components/SettingsDeck';
 
 const DEFAULT_SETTINGS = {
   timerMode: "MANUAL",
@@ -16,14 +21,15 @@ const DEFAULT_SETTINGS = {
 function Lobby() {
   const { roomId } = useParams();
   
+  // --- LOGIC & STATE ---
   const [players, setPlayers] = useState([]);
   const [gameStatus, setGameStatus] = useState("LOBBY");
   const [currentUser, setCurrentUser] = useState(null);
   const [needsToJoin, setNeedsToJoin] = useState(true);
   const [name, setName] = useState("");
-  const [showSettings, setShowSettings] = useState(true);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
-  const [copied, setCopied] = useState(false); 
+  const [view, setView] = useState('MAIN'); // 'MAIN' or 'SETTINGS'
+  const [copied, setCopied] = useState(false);
 
   usePresence(roomId, auth.currentUser?.uid);
 
@@ -55,8 +61,7 @@ function Lobby() {
 
     const statusRef = ref(db, `rooms/${roomId}/status`);
     const unsubStatus = onValue(statusRef, (snapshot) => {
-      const status = snapshot.val();
-      if (status) setGameStatus(status);
+      setGameStatus(snapshot.val() || "LOBBY");
     });
 
     const settingsRef = ref(db, `rooms/${roomId}/settings`);
@@ -85,16 +90,18 @@ function Lobby() {
     });
   };
 
-  const isHost = players.length > 0 && auth.currentUser && players[0].id === auth.currentUser.uid;
+  const handleCopy = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Use 'currentUser' state variable instead of auth.currentUser for stability
+  const isHost = players.length > 0 && currentUser && players[0].id === currentUser.uid;
 
   const updateSetting = (key, value) => {
       if (!isHost) return;
       update(ref(db, `rooms/${roomId}/settings`), { [key]: value });
-  };
-
-  const handleKick = (playerId) => {
-    if (!confirm("Kick this player?")) return;
-    remove(ref(db, `rooms/${roomId}/players/${playerId}`));
   };
 
   const handleStartGame = async () => {
@@ -110,7 +117,10 @@ function Lobby() {
     updates[`rooms/${roomId}/playerOrder`] = order;
     updates[`rooms/${roomId}/books`] = initialBooks;
     
-    // FIX: Set timerEnd timestamp if dynamic, otherwise clear it
+    players.forEach(p => {
+        updates[`rooms/${roomId}/players/${p.id}/submitted`] = null;
+    });
+
     if (settings.timerMode === "DYNAMIC") {
         updates[`rooms/${roomId}/timerEnd`] = Date.now() + ((settings.baseTime || 60) * 1000);
     } else {
@@ -120,27 +130,35 @@ function Lobby() {
     await update(ref(db), updates);
   };
 
-  const copyLink = () => {
-      navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+  const handleResetGame = async () => {
+    if (!isHost) return;
+    const updates = {};
+    updates[`rooms/${roomId}/status`] = "LOBBY";
+    updates[`rooms/${roomId}/round`] = 0;
+    updates[`rooms/${roomId}/timerEnd`] = null;
+    updates[`rooms/${roomId}/books`] = null;
+    players.forEach(p => {
+        updates[`rooms/${roomId}/players/${p.id}/submitted`] = null;
+    });
+    await update(ref(db), updates);
   };
 
 
+  // --- VIEW ROUTING ---
   if (needsToJoin) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="glass-panel p-8 rounded-2xl max-w-md w-full text-center">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-zinc-950 text-white">
+        <div className="glass-panel p-8 rounded-2xl max-w-md w-full text-center border border-white/10 bg-zinc-900/50">
           <h2 className="text-sm font-bold text-gray-400 mb-2 uppercase tracking-widest">Join Room</h2>
-          <h3 className="text-3xl font-mono text-green-400 mb-8">{roomId}</h3>
+          <h3 className="text-3xl font-mono text-green-400 mb-8 tracking-widest">{roomId}</h3>
           <input 
             type="text" 
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="glass-input w-full p-4 mb-4 text-center text-lg font-bold rounded-xl"
+            className="w-full p-4 mb-4 text-center text-lg font-bold rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-green-500 transition-colors"
             placeholder="ENTER NICKNAME"
           />
-          <button onClick={handleJoin} className="glass-button-primary w-full py-4 rounded-xl font-bold">
+          <button onClick={handleJoin} className="w-full py-4 rounded-xl font-bold bg-green-600 hover:bg-green-500 transition-colors text-black tracking-widest">
             JOIN GAME
           </button>
         </div>
@@ -148,134 +166,167 @@ function Lobby() {
     );
   }
 
+  if (gameStatus === "GALLERY") {
+    return <Gallery roomId={roomId} players={players} currentUser={currentUser} onExit={handleResetGame} />;
+  }
+
   if (gameStatus === "PLAYING") {
     return <Game roomId={roomId} players={players} currentUser={currentUser} settings={settings} />;
   }
 
+  // --- THE ELEVATOR LOBBY ---
   return (
-    <div className="min-h-screen p-8 flex flex-col items-center">
-      <div className="max-w-5xl w-full">
+    <div className="h-screen w-screen overflow-hidden bg-[#0a0a0a] text-white relative font-sans selection:bg-cyan-500/30">
+      
+      {/* Background Blobs (Static for now, stays behind everything) */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+         <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-violet-600/10 rounded-full blur-[120px]" />
+         <div className="absolute bottom-[-20%] right-[-10%] w-[50vw] h-[50vw] bg-blue-600/10 rounded-full blur-[120px]" />
+      </div>
+
+      {/* THE SLIDING CONTAINER */}
+      <div 
+        className="w-full h-[200vh] transition-transform duration-700 ease-in-out will-change-transform flex flex-col"
+        style={{ transform: view === 'SETTINGS' ? 'translateY(-50%)' : 'translateY(0)' }}
+      >
         
-        <div className="text-center mb-12">
-          <div className="inline-block glass-panel px-6 py-2 rounded-full mb-4">
-            <span className="text-xs font-bold text-gray-500 tracking-[0.3em]">LOBBY</span>
-          </div>
-          
-          <div className="relative inline-block group cursor-pointer" onClick={copyLink}>
-              <h1 className="text-7xl font-black text-white tracking-tighter drop-shadow-2xl transition-all group-hover:text-green-400">
-                  {roomId}
-              </h1>
-              <div className="absolute top-0 -right-12 h-full flex items-center opacity-0 transform -translate-x-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
-                  <div className="bg-white/10 p-2 rounded-lg backdrop-blur-md border border-white/20">
-                      {copied ? <span className="text-green-400 font-bold text-xs">COPIED</span> : <span className="text-white text-xs">COPY</span>}
-                  </div>
-              </div>
-          </div>
-        </div>
-
-        {/* FIX: Unique Key Error fixed here with (player.id || index) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
-          {players.map((player, index) => (
-            <div key={player.id || index} className={`glass-panel p-6 rounded-2xl flex flex-col items-center transition-all relative group ${player.presence?.state === 'offline' ? 'opacity-50 border-red-500/30' : 'hover:bg-white/5'}`}>
-              
-              {isHost && player.id !== currentUser.uid && (
-                <button 
-                    onClick={(e) => { e.stopPropagation(); handleKick(player.id); }}
-                    className="absolute top-2 right-2 w-6 h-6 bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white rounded-full flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
-                    title="Kick Player"
+        {/* === FLOOR 1: MAIN LOBBY === */}
+        <section className="h-[100vh] w-full relative flex flex-col items-center justify-center p-8 shrink-0">
+            
+            {/* CENTER STAGE */}
+            <div className="flex-1 w-full flex items-center justify-center relative">
+                
+                {/* 1. The Title Card */}
+                {/* We assign z-40 explicitly to the text layer */}
+                <div 
+                    onClick={handleCopy}
+                    className="relative group cursor-pointer flex flex-col items-center z-40"
                 >
-                    ×
-                </button>
-              )}
+                    <div className="relative">
+                        {/* THE CODE */}
+                        <h1 className="text-[12rem] leading-none font-black tracking-tighter text-white drop-shadow-2xl select-none transition-transform duration-300 group-hover:scale-105 group-active:scale-95">
+                            {roomId}
+                        </h1>
 
-              <div className={`w-20 h-20 rounded-full flex items-center justify-center text-3xl font-black mb-4 shadow-inner ${player.presence?.state === 'offline' ? 'bg-red-500/20 text-red-400' : 'bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-blue-300'}`}>
-                {player.avatar}
-              </div>
-              <h3 className="font-bold text-lg tracking-wide">{player.name}</h3>
-              
-              {player.presence?.state === 'offline' && <span className="text-xs text-red-500 font-bold mt-2 px-2 py-1 bg-red-500/10 rounded">DISCONNECTED</span>}
-              {player.id === auth.currentUser?.uid && <span className="text-xs text-green-400 mt-2 font-mono">[YOU]</span>}
-              {players[0].id === player.id && <span className="text-xs text-yellow-500 mt-2 font-mono">[HOST]</span>}
-            </div>
-          ))}
-        </div>
-
-        {/* SETTINGS PANEL */}
-        <div className="glass-panel rounded-2xl mb-12 max-w-3xl mx-auto text-left relative overflow-hidden transition-all duration-300">
-            <div 
-                onClick={() => setShowSettings(!showSettings)}
-                className="p-6 flex justify-between items-center cursor-pointer hover:bg-white/5"
-            >
-                <h3 className="text-lg font-bold text-white">
-                    Game Settings {isHost ? "" : "(View Only)"}
-                </h3>
-                <span className={`text-gray-400 transition-transform duration-300 ${showSettings ? 'rotate-180' : ''}`}>▼</span>
-            </div>
-
-            <div className={`px-6 pb-6 transition-all duration-300 overflow-hidden ${showSettings ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-4 border-t border-white/10">
-                    
-                    <div>
-                    <label className="block text-xs text-gray-400 font-bold mb-3 uppercase">Timer Mode</label>
-                    <div className="flex flex-col gap-2">
-                        {["MANUAL", "DYNAMIC"].map(mode => (
-                             <button key={mode} disabled={!isHost} onClick={() => updateSetting("timerMode", mode)}
-                                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all border ${settings.timerMode === mode ? "bg-green-500/20 border-green-500 text-green-300" : "bg-white/5 border-white/5 text-gray-400 hover:bg-white/10"}`}>
-                                {mode === "MANUAL" ? "Manual (No Limit)" : "Dynamic Speed"}
-                            </button>
-                        ))}
-                        {settings.timerMode === "DYNAMIC" && (
-                            <div className="mt-2">
-                                <label className="text-[10px] text-gray-500 uppercase font-bold">Base Seconds</label>
-                                <input type="number" disabled={!isHost} value={settings.baseTime || 60}
-                                    onChange={(e) => updateSetting("baseTime", parseInt(e.target.value) || 60)}
-                                    className="glass-input w-full p-2 text-center font-bold text-sm rounded mt-1" />
+                        {/* THE COPY BUTTON */}
+                        {/* z-10 puts it behind the text (z-auto children stack naturally, but we can be explicit if needed) */}
+                        <div className="absolute left-full top-1/2 -translate-y-1/2 ml-8 flex items-center gap-3 opacity-0 -translate-x-12 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-500 ease-out z-10 pointer-events-none group-hover:pointer-events-auto">
+                            <div className={`
+                                w-16 h-16 rounded-full flex items-center justify-center border backdrop-blur-md shadow-2xl
+                                ${copied 
+                                    ? 'bg-green-500 border-green-400 text-black' 
+                                    : 'bg-zinc-800/80 border-white/20 text-white group-hover:bg-white group-hover:text-black'}
+                                transition-colors duration-300
+                            `}>
+                                {copied ? <Check strokeWidth={4} /> : <Copy strokeWidth={2.5} />}
                             </div>
-                        )}
-                    </div>
-                    </div>
-
-                    <div>
-                    <label className="block text-xs text-gray-400 font-bold mb-3 uppercase">First Round</label>
-                    <div className="flex flex-col gap-2">
-                        <button disabled={!isHost} onClick={() => updateSetting("startMode", "WRITE")}
-                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all border ${settings.startMode === "WRITE" ? "bg-blue-500/20 border-blue-500 text-blue-300" : "bg-white/5 border-white/5 text-gray-400 hover:bg-white/10"}`}>
-                            Write a Prompt
-                        </button>
-                        <button disabled={!isHost} onClick={() => updateSetting("startMode", "DRAW")}
-                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all border ${settings.startMode === "DRAW" ? "bg-purple-500/20 border-purple-500 text-purple-300" : "bg-white/5 border-white/5 text-gray-400 hover:bg-white/10"}`}>
-                            Draw Anything
-                        </button>
-                    </div>
+                            <div className="bg-white/10 px-4 py-2 rounded-lg backdrop-blur-md border border-white/10 text-xs font-bold uppercase tracking-widest whitespace-nowrap text-white">
+                                {copied ? "Copied!" : "Copy Link"}
+                            </div>
+                        </div>
                     </div>
 
-                    <div>
-                    <label className="block text-xs text-gray-400 font-bold mb-3 uppercase">Anonymity</label>
-                    <button disabled={!isHost} onClick={() => updateSetting("ghostMode", !settings.ghostMode)}
-                        className={`w-full py-3 rounded-lg text-sm font-bold transition-all border flex items-center justify-center gap-2 ${settings.ghostMode ? "bg-gray-700/50 border-gray-500 text-gray-200" : "bg-white/5 border-white/5 text-gray-500 hover:bg-white/10"}`}>
-                        {settings.ghostMode ? "Names Hidden" : "Names Visible"}
-                    </button>
-                    </div>
+                    {/* THE LABEL */}
+                    <p className="text-zinc-500 uppercase tracking-[0.8em] text-xs font-bold mt-6 animate-pulse">
+                        Lobby Code
+                    </p>
+                </div>
 
+                {/* 2. The Orbit Engine */}
+                {/* z-index is handled internally by the component for each dot */}
+                <PlayerOrbit players={players} />
+
+            </div>
+
+            {/* BOTTOM BAR: SETTINGS BUTTON & START */}
+            <div className="h-32 w-full flex items-center justify-between max-w-6xl z-30 pointer-events-none">
+                
+                {/* SETTINGS (Left) - Enable pointer events */}
+                <button 
+                  onClick={() => setView('SETTINGS')}
+                  className="group flex flex-col items-center gap-2 text-zinc-500 hover:text-white transition-colors pointer-events-auto"
+                >
+                    <Settings className="w-8 h-8 transition-transform group-hover:rotate-90 duration-500" strokeWidth={1.5} />
+                    <span className="text-[10px] uppercase tracking-widest font-bold opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">Settings</span>
+                </button>
+
+                {/* START BUTTON (Right) - Enable pointer events */}
+                <div className="pointer-events-auto">
+                    <StartButton 
+                        playerCount={players.length} 
+                        onStart={handleStartGame} 
+                        isHost={isHost} 
+                    />
                 </div>
             </div>
-        </div>
+        </section>
 
-        <div className="text-center pb-20">
-          {isHost ? (
-            <button 
-              onClick={handleStartGame}
-              className="btn-satisfying px-20 py-8 text-2xl shadow-2xl"
-            >
-              START GAME
-            </button>
-          ) : (
-            <div className="flex flex-col items-center gap-2 opacity-50 animate-pulse">
-               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-               <span className="text-xs tracking-widest uppercase">Waiting for Host...</span>
-            </div>
-          )}
-        </div>
+
+        {/* === FLOOR 2: SETTINGS === */}
+        <section className="h-[100vh] w-full relative flex flex-col items-center p-8 shrink-0 bg-black/40 backdrop-blur-xl">
+             
+             {/* HEADER: RETURN BUTTON */}
+             <div className="w-full max-w-4xl pt-8 pb-12 flex justify-start">
+                <button 
+                  onClick={() => setView('MAIN')}
+                  className="flex items-center gap-3 text-zinc-500 hover:text-white transition-colors group"
+                >
+                    <div className="p-2 rounded-full border border-white/10 group-hover:bg-white group-hover:text-black transition-all">
+                        <ChevronUp className="w-6 h-6" />
+                    </div>
+                    <span className="text-sm font-bold uppercase tracking-widest">Back to Lobby</span>
+                </button>
+             </div>
+
+             {/* SETTINGS CONTENT */}
+             <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-12">
+                
+                {/* SETTING 1: TIMER */}
+                <div className="space-y-6">
+                    <h3 className="text-2xl font-bold tracking-tight">Time Control</h3>
+                    <div className="flex flex-col gap-3">
+                        <button 
+                            disabled={!isHost}
+                            onClick={() => updateSetting("timerMode", "MANUAL")}
+                            className={`p-6 rounded-2xl border text-left transition-all ${settings.timerMode === 'MANUAL' ? 'bg-white text-black border-white' : 'bg-zinc-900/50 border-white/5 hover:border-white/20'}`}
+                        >
+                            <div className="font-bold text-lg mb-1">Manual Mode</div>
+                            <div className={`text-sm ${settings.timerMode === 'MANUAL' ? 'text-zinc-600' : 'text-zinc-500'}`}>Host ends rounds manually. Relaxed pace.</div>
+                        </button>
+
+                        <button 
+                            disabled={!isHost}
+                            onClick={() => updateSetting("timerMode", "DYNAMIC")}
+                            className={`p-6 rounded-2xl border text-left transition-all ${settings.timerMode === 'DYNAMIC' ? 'bg-green-500 text-black border-green-500' : 'bg-zinc-900/50 border-white/5 hover:border-white/20'}`}
+                        >
+                            <div className="font-bold text-lg mb-1">Dynamic Mode</div>
+                            <div className={`text-sm ${settings.timerMode === 'DYNAMIC' ? 'text-green-900' : 'text-zinc-500'}`}>Timer decreases every round. High pressure.</div>
+                        </button>
+                    </div>
+                </div>
+
+                {/* SETTING 2: ANONYMITY */}
+                <div className="space-y-6">
+                    <h3 className="text-2xl font-bold tracking-tight">Visibility</h3>
+                    <button 
+                        disabled={!isHost}
+                        onClick={() => updateSetting("ghostMode", !settings.ghostMode)}
+                        className={`w-full p-6 rounded-2xl border text-left transition-all flex items-center justify-between ${settings.ghostMode ? 'bg-violet-500 text-white border-violet-500' : 'bg-zinc-900/50 border-white/5 hover:border-white/20'}`}
+                    >
+                        <div>
+                            <div className="font-bold text-lg mb-1">Ghost Mode</div>
+                            <div className="text-sm opacity-80">
+                                {settings.ghostMode ? "Names are hidden during voting." : "Names are always visible."}
+                            </div>
+                        </div>
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${settings.ghostMode ? 'border-white bg-white/20' : 'border-zinc-600'}`}>
+                            {settings.ghostMode && <div className="w-3 h-3 bg-white rounded-full" />}
+                        </div>
+                    </button>
+                </div>
+
+             </div>
+        </section>
 
       </div>
     </div>

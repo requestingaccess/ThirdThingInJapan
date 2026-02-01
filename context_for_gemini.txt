@@ -1,0 +1,3590 @@
+# PROJECT CONTEXT EXPORT
+# Root: C:\Users\Maxwell\Desktop\ThirdThingInJapan
+
+----------------------------------------
+FILE: eslint.config.js
+----------------------------------------
+import js from '@eslint/js'
+import globals from 'globals'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+import { defineConfig, globalIgnores } from 'eslint/config'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{js,jsx}'],
+    extends: [
+      js.configs.recommended,
+      reactHooks.configs.flat.recommended,
+      reactRefresh.configs.vite,
+    ],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        ecmaFeatures: { jsx: true },
+        sourceType: 'module',
+      },
+    },
+    rules: {
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+    },
+  },
+])
+
+
+----------------------------------------
+FILE: generate_context.py
+----------------------------------------
+import os
+
+# --- CONFIGURATION ---
+# 1. Output file name
+OUTPUT_FILE = 'context_for_gemini.txt'
+
+# 2. File extensions to include (Add or remove as needed)
+ALLOWED_EXTENSIONS = {
+    '.html', '.css', '.js', '.jsx', '.ts', '.tsx',  # Web
+    '.py', '.json', '.md', '.sql'                   # Backend/Docs
+}
+
+# 3. Directories to strictly IGNORE (Prevents massive files)
+IGNORE_DIRS = {
+    'node_modules', '.git', '__pycache__', 'dist', 'build', 'venv', 'env', '.next'
+}
+
+# 4. Specific files to IGNORE
+IGNORE_FILES = {
+    'package-lock.json', 'yarn.lock', '.DS_Store', OUTPUT_FILE
+}
+
+def get_file_content(filepath):
+    """Reads a file and returns its content as a string."""
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            return f.read()
+    except Exception as e:
+        return f"[Error reading file: {e}]"
+
+def generate_context():
+    """Scans directories and writes content to the output file."""
+    project_root = os.getcwd()
+    
+    with open(OUTPUT_FILE, 'w', encoding='utf-8') as outfile:
+        # Write a header
+        outfile.write(f"# PROJECT CONTEXT EXPORT\n")
+        outfile.write(f"# Root: {project_root}\n\n")
+
+        for root, dirs, files in os.walk(project_root):
+            # Modify 'dirs' in-place to skip ignored directories
+            dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
+            
+            for file in files:
+                if file in IGNORE_FILES:
+                    continue
+                
+                _, ext = os.path.splitext(file)
+                if ext.lower() in ALLOWED_EXTENSIONS:
+                    filepath = os.path.join(root, file)
+                    rel_path = os.path.relpath(filepath, project_root)
+                    
+                    print(f"Adding: {rel_path}")
+                    
+                    # Formatting specifically designed for AI readability
+                    outfile.write(f"{'-'*40}\n")
+                    outfile.write(f"FILE: {rel_path}\n")
+                    outfile.write(f"{'-'*40}\n")
+                    outfile.write(get_file_content(filepath))
+                    outfile.write("\n\n")
+
+    print(f"\nSuccess! Context generated at: {OUTPUT_FILE}")
+
+if __name__ == "__main__":
+    generate_context()
+
+----------------------------------------
+FILE: index.html
+----------------------------------------
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ThirdThingInJapan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+
+----------------------------------------
+FILE: package.json
+----------------------------------------
+{
+  "name": "thirdthinginjapan",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "homepage": "https://requestingaccess.github.io/ThirdThingInJapan",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  },
+  "dependencies": {
+    "fabric": "^5.3.0",
+    "firebase": "^12.8.0",
+    "framer-motion": "^12.29.2",
+    "lucide-react": "^0.563.0",
+    "react": "^19.2.0",
+    "react-colorful": "^5.6.1",
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.13.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@tailwindcss/postcss": "^4.1.18",
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "autoprefixer": "^10.4.23",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "gh-pages": "^6.3.0",
+    "globals": "^16.5.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.18",
+    "vite": "^7.2.4"
+  }
+}
+
+
+----------------------------------------
+FILE: postcss.config.js
+----------------------------------------
+export default {
+  plugins: {
+    '@tailwindcss/postcss': {},
+    autoprefixer: {},
+  },
+}
+
+----------------------------------------
+FILE: README.md
+----------------------------------------
+# React + Vite
+
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+
+Currently, two official plugins are available:
+
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+
+## React Compiler
+
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+
+----------------------------------------
+FILE: tailwind.config.js
+----------------------------------------
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+
+----------------------------------------
+FILE: vite.config.js
+----------------------------------------
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  base: '/ThirdThingInJapan/', // <--- EXACT CASE SENSITIVE NAME
+})
+
+----------------------------------------
+FILE: src\App.css
+----------------------------------------
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+
+----------------------------------------
+FILE: src\App.jsx
+----------------------------------------
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
+import Lobby from './pages/Lobby';
+import Game from './pages/Game'; // Ensure Game is imported if you use it in routing directly or via Lobby
+
+function App() {
+  return (
+    <div className="relative min-h-screen overflow-hidden bg-black text-white selection:bg-green-500 selection:text-black">
+      
+      {/* --- BACKGROUND BLOBS --- */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        {/* Green Blob */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-green-500/20 rounded-full mix-blend-screen filter blur-[100px] animate-blob"></div>
+        {/* Blue Blob */}
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-blue-600/20 rounded-full mix-blend-screen filter blur-[100px] animate-blob animation-delay-2000"></div>
+        {/* Purple/Dark Blob for depth */}
+        <div className="absolute -bottom-32 left-1/3 w-96 h-96 bg-purple-600/10 rounded-full mix-blend-screen filter blur-[100px] animate-blob animation-delay-4000"></div>
+        
+        {/* Grid Overlay for texture (Optional, adds tech feel) */}
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+      </div>
+
+      {/* --- CONTENT --- */}
+      <div className="relative z-10">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/room/:roomId" element={<Lobby />} />
+        </Routes>
+      </div>
+    </div>
+  );
+}
+
+export default App;
+
+----------------------------------------
+FILE: src\firebase.js
+----------------------------------------
+import { initializeApp } from "firebase/app";
+import { getDatabase } from "firebase/database";
+import { getAuth } from "firebase/auth";
+
+// Your real configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyBJhHojs2TfYuGsgBBFRkdkgx1f-h-oFcg",
+  authDomain: "thirdthinginjapan.firebaseapp.com",
+  databaseURL: "https://thirdthinginjapan-default-rtdb.firebaseio.com",
+  projectId: "thirdthinginjapan",
+  storageBucket: "thirdthinginjapan.firebasestorage.app",
+  messagingSenderId: "530583062307",
+  appId: "1:530583062307:web:6cf343f48a5b87abacee96"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+// Export the services so other files can use them
+export const db = getDatabase(app);
+export const auth = getAuth(app);
+
+----------------------------------------
+FILE: src\index.css
+----------------------------------------
+@import "tailwindcss";
+
+body {
+  margin: 0;
+  padding: 0;
+  overscroll-behavior: none; /* Stops the "bounce" scroll */
+  overflow: hidden; /* Ensures no scrollbars appear */
+  height: 100%;
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background-color: #050505;
+  color: white;
+  overflow-x: hidden;
+}
+
+/* --- BACKGROUND BLOBS --- */
+@keyframes blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+.animate-blob {
+  animation: blob 10s infinite;
+}
+
+.animation-delay-2000 { animation-delay: 2s; }
+.animation-delay-4000 { animation-delay: 4s; }
+
+/* --- SATISFYING BUTTON ANIMATIONS --- */
+@keyframes shimmer {
+  0% { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px -5px rgba(34, 197, 94, 0.3); }
+  50% { box-shadow: 0 0 40px -5px rgba(34, 197, 94, 0.6); }
+}
+
+/* --- TIMER PENALTY ANIMATION --- */
+@keyframes time-penalty {
+  0% { color: white; transform: scale(1); }
+  20% { color: #ef4444; transform: scale(1.5) rotate(-5deg); } /* Red Flash */
+  40% { transform: scale(1.2) rotate(5deg); }
+  60% { transform: scale(1.1); }
+  100% { color: white; transform: scale(1); }
+}
+
+.animate-penalty {
+  animation: time-penalty 0.6s ease-out;
+}
+
+/* --- UI COMPONENTS --- */
+.glass-panel {
+  @apply bg-black/60 backdrop-blur-xl border border-white/5 shadow-2xl;
+}
+
+.glass-input {
+  @apply bg-white/5 border border-white/10 text-white placeholder-gray-500 
+         focus:border-green-500/50 focus:bg-white/10 focus:outline-none transition-all;
+}
+
+/* The "Satisfying" Start Button */
+.btn-satisfying {
+  @apply relative overflow-hidden rounded-full font-black tracking-widest text-white uppercase transition-all duration-300 transform;
+  background: linear-gradient(90deg, #16a34a, #2563eb, #16a34a);
+  background-size: 200% auto;
+  animation: shimmer 3s linear infinite;
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
+}
+
+.btn-satisfying:hover {
+  @apply scale-105;
+  box-shadow: 0 0 50px rgba(34, 197, 94, 0.8);
+  animation-duration: 1.5s; /* Speed up shimmer on hover */
+}
+
+.btn-satisfying:active {
+  @apply scale-95;
+}
+
+/* Standard Glass Button */
+.glass-button {
+  @apply bg-white/5 border border-white/10 backdrop-blur-sm text-white font-bold tracking-widest
+         hover:bg-white/10 hover:border-white/20 active:bg-black/20 transition-all shadow-lg;
+}
+
+.glass-button-primary {
+  @apply bg-green-500/20 border border-green-500/30 text-green-400 
+         hover:bg-green-500/30 hover:border-green-500/50 hover:text-white hover:shadow-green-500/20;
+}
+
+.glass-button-danger {
+  @apply bg-red-500/10 border border-red-500/20 text-red-400 
+         hover:bg-red-500/20 hover:border-red-500/40 hover:text-white;
+}
+
+/* Add to src/index.css */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Add to src/index.css */
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fly-out-fade {
+  0% { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
+  100% { 
+    opacity: 0; 
+    transform: translateY(-40px) scale(0.8); 
+  }
+}
+
+.animate-fly-out {
+  animation: fly-out-fade 1.5s ease-out forwards;
+}
+
+.animate-fade-in-right {
+  animation: fadeInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* src/index.css */
+@keyframes popOut {
+  to { opacity: 1; transform: translateX(0); }
+}
+
+----------------------------------------
+FILE: src\main.jsx
+----------------------------------------
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+
+if (typeof global === 'undefined') {
+  window.global = window;
+}
+
+import App from './App.jsx'
+import './index.css'
+import { HashRouter } from 'react-router-dom' // Changed from BrowserRouter
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <HashRouter>
+      <App />
+    </HashRouter>
+  </React.StrictMode>,
+)
+
+----------------------------------------
+FILE: src\utils.js
+----------------------------------------
+export const generateRoomCode = () => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No I, O, 0, 1 to avoid confusion
+  let result = '';
+  for (let i = 0; i < 4; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+};
+
+----------------------------------------
+FILE: src\components\CanvasSelector.jsx
+----------------------------------------
+import React from 'react';
+
+export default function CanvasSelector({ onSelect }) {
+  const options = [
+    { label: 'Portrait', aspect: 0.75, width: 'w-12', height: 'h-16' },
+    { label: 'Square', aspect: 1, width: 'w-14', height: 'h-14' },
+    { label: 'Landscape', aspect: 1.33, width: 'w-16', height: 'h-12' }
+  ];
+
+  return (
+    <div className="flex gap-8 animate-fade-in items-end">
+      {options.map((opt) => (
+        <button
+          key={opt.label}
+          onClick={() => onSelect(opt.aspect)}
+          className="group flex flex-col items-center gap-3 transition-transform hover:-translate-y-2"
+        >
+          {/* Minimal White Square Preview */}
+          <div className={`${opt.width} ${opt.height} bg-white shadow-lg rounded-sm transition-all group-hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]`} />
+          
+          <span className="text-[10px] font-bold text-zinc-500 group-hover:text-white uppercase tracking-widest">
+            {opt.label}
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+----------------------------------------
+FILE: src\components\GalleryCanvas.jsx
+----------------------------------------
+import React, { useEffect, useRef } from 'react';
+import { fabric } from 'fabric';
+
+const GalleryCanvas = ({ jsonData }) => {
+  const canvasRef = useRef(null);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!canvasRef.current || !jsonData) return;
+
+    // 1. Parse Data
+    let parsedData;
+    try {
+      parsedData = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
+    } catch (e) {
+      console.error("Gallery JSON parse error:", e);
+      return;
+    }
+
+    // Default to 800x600 if no dimensions found (legacy data support)
+    const originalW = parsedData.width || 800;
+    const originalH = parsedData.height || 600;
+
+    // 2. Init Static Canvas
+    // Note: We don't set width/height here yet.
+    const canvas = new fabric.StaticCanvas(canvasRef.current, {
+      renderOnAddRemove: false,
+      selection: false,
+      backgroundColor: '#ffffff', // The "Paper" color
+    });
+
+    canvas.loadFromJSON(parsedData, () => {
+      if (!containerRef.current) return;
+      
+      const containerW = containerRef.current.clientWidth;
+      const containerH = containerRef.current.clientHeight;
+
+      // 3. Calculate Scale (Contain strategy)
+      // "How much do I need to shrink the paper to fit inside the card?"
+      const scaleX = containerW / originalW;
+      const scaleY = containerH / originalH;
+      const scale = Math.min(scaleX, scaleY);
+
+      // 4. Set Canvas Dimensions to the SCALED size
+      // This makes the canvas element exactly the size of the paper.
+      const finalW = originalW * scale;
+      const finalH = originalH * scale;
+
+      canvas.setDimensions({ width: finalW, height: finalH });
+      canvas.setZoom(scale);
+
+      // No panning needed because the canvas element itself is the view
+      canvas.requestRenderAll();
+    });
+
+    return () => {
+      canvas.dispose();
+    };
+  }, [jsonData]);
+
+  return (
+    // Flexbox centering handles the whitespace (grey bars)
+    <div ref={containerRef} className="w-full h-full flex items-center justify-center overflow-hidden pointer-events-none">
+      <canvas ref={canvasRef} className="shadow-2xl" />
+    </div>
+  );
+};
+
+export default GalleryCanvas;
+
+----------------------------------------
+FILE: src\components\LiquidColorPicker.jsx
+----------------------------------------
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
+import { motion, useSpring, AnimatePresence } from 'framer-motion';
+import { 
+  polarToCartesian, 
+  cartesianToPolar, 
+  normalizeAngle, 
+  hslaToString, 
+  TWO_PI, 
+  PI,
+  noise,
+  mapRange,
+  clamp,
+} from '../utils/geometry';
+
+// --- CONFIGURATION ---
+const IDLE_RADIUS = 30;     
+const EXPANDED_RADIUS = 140; 
+const POINTS_COUNT = 120;
+const SINUSOID_FREQ = 8;     
+const SINUSOID_AMP = 4;      
+const BLOB_NOISE_AMP = 6;
+
+const TRIGGER_ENTER_DIST = IDLE_RADIUS + 20; 
+const TRIGGER_LEAVE_DIST = EXPANDED_RADIUS + 40;
+
+const LiquidColorPicker = ({ 
+  initialColor = { h: 0, s: 100, l: 50, a: 1 },
+  onChange 
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [mode, setMode] = useState('COLOR'); 
+  
+  const [color, setColor] = useState(initialColor);
+  const [transparency, setTransparency] = useState(initialColor.a);
+  const transparencyRef = useRef(initialColor.a);
+
+  const [knobAngle, setKnobAngle] = useState(-PI / 2);
+  const [isDraggingKnob, setIsDraggingKnob] = useState(false);
+  const [isDraggingColor, setIsDraggingColor] = useState(false);
+
+  const [pathFullD, setPathFullD] = useState('');
+  const [pathDottedD, setPathDottedD] = useState('');
+  const [pathSolidD, setPathSolidD] = useState('');
+  const [knobPos, setKnobPos] = useState({ x: 0, y: 0 });
+  
+  const timeRef = useRef(0);
+  const reqRef = useRef();
+  
+  const expansionProgress = useSpring(0, { stiffness: 60, damping: 15 });
+  const containerRef = useRef(null);
+  const svgRef = useRef(null);
+
+  // --- HOVER LOGIC (Global Listener) ---
+  // We use global listener so we can set pointer-events: none on the container
+  useEffect(() => {
+    const handleGlobalMouseMove = (e) => {
+      if (isDraggingColor || isDraggingKnob) return; 
+      if (!svgRef.current) return;
+
+      const rect = svgRef.current.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const d = Math.sqrt(Math.pow(e.clientX - cx, 2) + Math.pow(e.clientY - cy, 2));
+
+      if (isExpanded) {
+        if (d > TRIGGER_LEAVE_DIST) {
+          setIsExpanded(false);
+          expansionProgress.set(0);
+        }
+      } else {
+        if (d < TRIGGER_ENTER_DIST) {
+          setIsExpanded(true);
+          expansionProgress.set(1);
+        }
+      }
+    };
+
+    window.addEventListener('mousemove', handleGlobalMouseMove);
+    return () => window.removeEventListener('mousemove', handleGlobalMouseMove);
+  }, [isExpanded, isDraggingColor, isDraggingKnob, expansionProgress]);
+
+  useEffect(() => {
+    const handleUp = () => {
+      setIsDraggingKnob(false);
+      setIsDraggingColor(false);
+    };
+    window.addEventListener('pointerup', handleUp);
+    return () => window.removeEventListener('pointerup', handleUp);
+  }, []);
+
+  const toggleMode = (e) => {
+    e.stopPropagation();
+    const newMode = mode === 'COLOR' ? 'GRAYSCALE' : 'COLOR';
+    setMode(newMode);
+    if (newMode === 'GRAYSCALE') setColor(prev => ({ ...prev, s: 0, l: 50 })); 
+    else setColor(prev => ({ ...prev, s: 100, l: 50 })); 
+  };
+
+  const updateColorFromPointer = useCallback((e) => {
+    if (!svgRef.current) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    
+    const { r, theta } = cartesianToPolar(cx, cy, e.clientX, e.clientY);
+    const maxR = EXPANDED_RADIUS - SINUSOID_AMP;
+    let t = clamp(r / maxR, 0, 1);
+
+    if (mode === 'COLOR') {
+       let hue = (theta * 180) / PI; 
+       if (hue < 0) hue += 360;
+       const newL = 100 - (50 * t);
+       setColor(prev => ({ ...prev, h: hue, s: 100, l: newL }));
+    } else {
+       if (t < 0.1) t = 0;
+       else if (t > 0.9) t = 1;
+       const newL = 100 - (100 * t);
+       setColor(prev => ({ ...prev, s: 0, l: newL }));
+    }
+  }, [mode]);
+
+  const updateKnobFromPointer = useCallback((e) => {
+    if (!svgRef.current) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    
+    const { theta } = cartesianToPolar(cx, cy, e.clientX, e.clientY);
+    let normalized = normalizeAngle(theta - (-PI / 2));
+    let newAlpha = 1 - (normalized / TWO_PI);
+    
+    const prevAlpha = transparencyRef.current;
+    const diff = newAlpha - prevAlpha;
+
+    if (Math.abs(diff) > 0.5) {
+      if (prevAlpha > 0.5) newAlpha = 1;
+      else newAlpha = 0;
+    }
+
+    transparencyRef.current = newAlpha;
+    setTransparency(newAlpha);
+    setColor(prev => ({ ...prev, a: newAlpha }));
+
+    const finalTheta = (1 - newAlpha) * TWO_PI - PI / 2;
+    setKnobAngle(finalTheta);
+  }, []);
+
+  const handlePointerMove = (e) => {
+    if (isDraggingColor) updateColorFromPointer(e);
+    else if (isDraggingKnob) updateKnobFromPointer(e);
+  };
+
+  const handleColorAreaPointerDown = (e) => {
+    if (!isExpanded) return;
+    setIsDraggingColor(true);
+    updateColorFromPointer(e);
+  };
+
+  const handleKnobPointerDown = (e) => {
+    if (!isExpanded) return;
+    e.stopPropagation();
+    setIsDraggingKnob(true);
+  };
+
+  // --- ANIMATION ---
+  useEffect(() => {
+    const animate = (time) => {
+      timeRef.current = time * 0.001;
+      const progress = expansionProgress.get();
+      
+      const currentRadius = mapRange(progress, 0, 1, IDLE_RADIUS, EXPANDED_RADIUS);
+      const currentSineAmp = mapRange(progress, 0, 1, 0, SINUSOID_AMP);
+      const currentNoiseAmp = mapRange(progress, 0, 1, BLOB_NOISE_AMP, 2);
+      
+      const center = { x: 200, y: 200 }; 
+      const startAngleOffset = -PI / 2;
+      const points = [];
+
+      let kR = currentRadius;
+      kR += Math.sin(knobAngle * SINUSOID_FREQ + timeRef.current) * currentSineAmp;
+      kR += noise(knobAngle, timeRef.current * 2) * currentNoiseAmp;
+      const exactKnobPos = polarToCartesian(center.x, center.y, kR, knobAngle);
+      setKnobPos(exactKnobPos);
+
+      const dottedPts = [];
+      const solidPts = [];
+
+      for (let i = 0; i <= POINTS_COUNT; i++) {
+        const angle = (i / POINTS_COUNT) * TWO_PI + startAngleOffset;
+        let r = currentRadius;
+        r += Math.sin(angle * SINUSOID_FREQ + timeRef.current) * currentSineAmp;
+        r += noise(angle, timeRef.current * 2) * currentNoiseAmp;
+        
+        const p = polarToCartesian(center.x, center.y, r, angle);
+        points.push(p);
+
+        if (angle < knobAngle) dottedPts.push(p);
+        else solidPts.push(p);
+      }
+
+      let d = `M ${points[0].x} ${points[0].y}`;
+      for (let i = 1; i < points.length; i++) d += ` L ${points[i].x} ${points[i].y}`;
+      d += ' Z';
+      setPathFullD(d);
+
+      let dD = "";
+      if (dottedPts.length > 0) {
+        dD = `M ${dottedPts[0].x} ${dottedPts[0].y}`;
+        for (let i = 1; i < dottedPts.length; i++) dD += ` L ${dottedPts[i].x} ${dottedPts[i].y}`;
+        dD += ` L ${exactKnobPos.x} ${exactKnobPos.y}`;
+      }
+
+      let dS = `M ${exactKnobPos.x} ${exactKnobPos.y}`;
+      if (solidPts.length > 0) {
+        for (let i = 0; i < solidPts.length; i++) dS += ` L ${solidPts[i].x} ${solidPts[i].y}`;
+      }
+      if (dottedPts.length === 0) dS += ' Z';
+
+      setPathDottedD(dD);
+      setPathSolidD(dS);
+
+      reqRef.current = requestAnimationFrame(animate);
+    };
+
+    reqRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(reqRef.current);
+  }, [expansionProgress, knobAngle]);
+
+  useEffect(() => {
+    if (onChange) onChange(color);
+  }, [color, onChange]);
+
+  const rainbowGradient = `conic-gradient(from 90deg, hsl(0,100%,50%), hsl(60,100%,50%), hsl(120,100%,50%), hsl(180,100%,50%), hsl(240,100%,50%), hsl(300,100%,50%), hsl(360,100%,50%))`;
+  const tintGradient = `radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%)`;
+  const grayscaleGradient = `radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(0,0,0,1) 100%)`;
+
+  const selectionDotPos = useMemo(() => {
+    let t = 0;
+    if (mode === 'COLOR') t = (100 - color.l) / 50;
+    else t = (100 - color.l) / 100;
+    t = clamp(t, 0, 1);
+    const r = t * (EXPANDED_RADIUS - SINUSOID_AMP); 
+    const theta = (color.h * PI) / 180;
+    return polarToCartesian(200, 200, r, theta);
+  }, [color.h, color.l, mode]);
+
+  return (
+    <div 
+      ref={containerRef}
+      className="relative w-[400px] h-[400px] flex items-center justify-center select-none"
+      onPointerMove={handlePointerMove}
+      style={{ transform: 'scale(1)', pointerEvents: 'none' }} // CLICK-THROUGH ENABLED
+    >
+      <div className="pointer-events-none w-full h-full"> 
+        <svg 
+          ref={svgRef}
+          width="400" 
+          height="400" 
+          viewBox="0 0 400 400"
+          className="touch-none"
+        >
+          <defs>
+            <clipPath id="blobMask"><path d={pathFullD} /></clipPath>
+          </defs>
+
+          {/* 1. Base Blob - INTERACTIVE */}
+          <path 
+            d={pathFullD} 
+            fill={hslaToString(color)} 
+            className="transition-colors duration-200 pointer-events-auto" 
+          />
+
+          {/* 2. Gradients - INTERACTIVE ONLY WHEN EXPANDED */}
+          <g clipPath="url(#blobMask)" style={{ opacity: isExpanded ? 1 : 0, transition: 'opacity 0.5s ease' }}>
+            <foreignObject x="0" y="0" width="400" height="400" style={{pointerEvents: isExpanded ? 'auto' : 'none'}}>
+               {mode === 'COLOR' ? (
+                 <>
+                  <div className="w-full h-full absolute" style={{ background: rainbowGradient, opacity: transparency }} />
+                  <div className="w-full h-full absolute" style={{ background: tintGradient, opacity: transparency }} />
+                 </>
+               ) : (
+                 <div className="w-full h-full absolute" style={{ background: grayscaleGradient, opacity: transparency }} />
+               )}
+            </foreignObject>
+            
+            {/* Hit Area */}
+            <rect 
+                x="0" y="0" width="400" height="400" 
+                fill="transparent" 
+                onPointerDown={handleColorAreaPointerDown} 
+                className="cursor-crosshair" 
+                style={{pointerEvents: isExpanded ? 'auto' : 'none'}}
+            />
+
+            <circle cx={selectionDotPos.x} cy={selectionDotPos.y} r="8" fill="transparent" stroke={mode === 'COLOR' ? "white" : "cyan"} strokeWidth="2" className="pointer-events-none shadow-sm" />
+          </g>
+
+          {/* 3. Borders */}
+          <path d={pathDottedD} fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeDasharray="4 6" strokeLinecap="round" strokeLinejoin="round" className="pointer-events-none" />
+          <path d={pathSolidD} fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="pointer-events-none" />
+          
+          {/* 4. Knob - INTERACTIVE */}
+          <AnimatePresence>
+            {isExpanded && (
+              <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <circle cx={knobPos.x} cy={knobPos.y} r="12" fill="white" stroke="rgba(0,0,0,0.2)" strokeWidth="1" className="cursor-grab active:cursor-grabbing shadow-lg pointer-events-auto" onPointerDown={handleKnobPointerDown} />
+                <circle cx={knobPos.x} cy={knobPos.y} r="6" fill={`rgba(0,0,0, ${1 - transparency})`} className="pointer-events-none" />
+
+                {/* CENTER TOGGLE */}
+                <g 
+                  onClick={toggleMode} 
+                  className="cursor-pointer hover:opacity-80 transition-opacity pointer-events-auto"
+                >
+                   <circle cx="200" cy="200" r="14" fill="rgba(0,0,0,0.5)" stroke="white" strokeWidth="2" />
+                   {mode === 'COLOR' ? (
+                     <>
+                       <circle cx="195" cy="200" r="2" fill="#ff0055" />
+                       <circle cx="200" cy="200" r="2" fill="#00ff55" />
+                       <circle cx="205" cy="200" r="2" fill="#0055ff" />
+                     </>
+                   ) : (
+                     <circle cx="200" cy="200" r="4" fill="white" />
+                   )}
+                </g>
+              </motion.g>
+            )}
+          </AnimatePresence>
+        </svg>
+      </div>
+    </div>
+  );
+};
+
+export default LiquidColorPicker;
+
+----------------------------------------
+FILE: src\components\PinDeck.jsx
+----------------------------------------
+import React, { useState, useRef } from 'react';
+import { getToolById } from '../constants/tools';
+import { Pin, X } from 'lucide-react'; // <--- Import icons
+
+const PinDeck = ({ pinnedIds, activeToolId, onSelect, onUnpin }) => {
+  return (
+    <div className="flex items-end justify-center gap-3 h-16 pointer-events-auto">
+      
+      {/* Pin Icon Label */}
+      <div className="h-12 flex items-center justify-center opacity-40 mr-1" title="Pinned Tools">
+        <Pin className="w-5 h-5 text-white" strokeWidth={1.5} />
+      </div>
+
+      {pinnedIds.length === 0 ? (
+        // Empty Placeholder
+        <div className="w-12 h-12 rounded-xl border-2 border-dashed border-zinc-700 bg-zinc-900/30 flex items-center justify-center transition-colors hover:border-zinc-600">
+            {/* Optional: Add a subtle Plus icon here or leave blank */}
+        </div>
+      ) : (
+        pinnedIds.map((id) => (
+          <PinSlot 
+            key={id} 
+            id={id} 
+            isActive={id === activeToolId} 
+            onSelect={() => onSelect(id)}
+            onUnpin={() => onUnpin(id)}
+          />
+        ))
+      )}
+    </div>
+  );
+};
+
+const PinSlot = ({ id, isActive, onSelect, onUnpin }) => {
+  const [showUnpin, setShowUnpin] = useState(false);
+  const timerRef = useRef(null);
+  const tool = getToolById(id);
+
+  if (!tool) return null;
+
+  const handleMouseEnter = () => {
+    timerRef.current = setTimeout(() => {
+      setShowUnpin(true);
+    }, 800); 
+  };
+
+  const handleMouseLeave = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setShowUnpin(false);
+  };
+
+  return (
+    <div 
+      className="relative group"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* Unpin Button */}
+      {showUnpin && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onUnpin();
+          }}
+          // Using Lucide X icon here
+          className="absolute -top-3 -right-3 w-6 h-6 flex items-center justify-center text-red-500 hover:text-red-400 hover:scale-110 z-50 animate-fade-in drop-shadow-md"
+          title="Unpin"
+        >
+          <X className="w-4 h-4" strokeWidth={3} /> 
+        </button>
+      )}
+
+      {/* The Tool Icon */}
+      <button
+        onClick={onSelect}
+        className={`
+          w-12 h-12 rounded-xl flex items-center justify-center border-2 transition-all duration-200 shadow-lg
+          ${isActive 
+            ? 'bg-cyan-500 text-white border-cyan-400 -translate-y-2 scale-110 shadow-cyan-500/30' 
+            : 'bg-zinc-900/80 text-zinc-400 border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800'}
+        `}
+      >
+        <div className="w-6 h-6 text-current">{tool.icon}</div>
+      </button>
+    </div>
+  );
+};
+
+export default PinDeck;
+
+----------------------------------------
+FILE: src\components\ReadOnlyCanvas.jsx
+----------------------------------------
+import React, { useEffect, useRef } from "react";
+import { fabric } from "fabric";
+
+export default function ReadOnlyCanvas({ data, width = 300, height = 300 }) {
+  const canvasEl = useRef(null);
+
+  useEffect(() => {
+    if (!canvasEl.current) return;
+
+    // 1. Init Static Canvas (Interaction Disabled)
+    const canvas = new fabric.StaticCanvas(canvasEl.current, {
+      backgroundColor: "#ffffff",
+      renderOnAddRemove: false,
+    });
+
+    // 2. Load Data
+    if (data) {
+        let parsedData = data;
+        if (typeof data === "string") {
+            try { parsedData = JSON.parse(data); } catch (e) { console.error("Canvas Parse Error", e); }
+        }
+
+        canvas.loadFromJSON(parsedData, () => {
+            // 3. Auto-Scale to fit container
+            const objects = canvas.getObjects();
+            if (objects.length > 0) {
+                // Determine scale based on assumed original size (usually window size)
+                // If your saved data has width/height, use that. Otherwise guess 800x600 or calc bounds.
+                // For simplicity, we just scale based on the incoming props vs the canvas internal size
+                
+                const vpt = canvas.viewportTransform;
+                // Simple zoom: just fit the canvas width
+                const scale = width / (parsedData.width || 800); 
+                canvas.setZoom(scale);
+                canvas.setWidth(width);
+                canvas.setHeight(height);
+            }
+            canvas.renderAll();
+        });
+    }
+
+    return () => {
+      canvas.dispose();
+    };
+  }, [data, width, height]);
+
+  return (
+    <div className="overflow-hidden rounded-lg shadow-sm border border-white/10 bg-white inline-block">
+      <canvas ref={canvasEl} width={width} height={height} />
+    </div>
+  );
+}
+
+----------------------------------------
+FILE: src\components\SquishySlider.jsx
+----------------------------------------
+import React, { useEffect, useRef } from 'react';
+
+const SquishySlider = ({ value, onChange, min = 1, max = 50 }) => {
+  const containerRef = useRef(null);
+  const knobRef = useRef(null);
+  const trackFillRef = useRef(null);
+  
+  // Physics State
+  const state = useRef({
+    currentY: 0,    // Visual position (pixels from bottom)
+    targetY: 0,     // Actual input position (pixels from bottom)
+  });
+
+  // Convert the 1-50 value into pixel height for the target
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const height = containerRef.current.clientHeight;
+    // Map value to 0.0 - 1.0
+    const percent = (value - min) / (max - min);
+    state.current.targetY = percent * height;
+  }, [value, min, max]);
+
+  // The Animation Loop
+  useEffect(() => {
+    let animationFrameId;
+
+    const loop = () => {
+      if (!knobRef.current || !trackFillRef.current) return;
+
+      const s = state.current;
+
+      // 1. Calculate Velocity (Distance between visual and target)
+      // The visual knob "chases" the target. 
+      // Larger difference = Faster movement = More Stretch.
+      const diff = s.targetY - s.currentY;
+      
+      // 2. Move the visual knob (Lerp)
+      // 0.15 is the "stiffness". Lower = looser/more lag.
+      s.currentY += diff * 0.25;
+
+      // 3. Calculate Stretch based on velocity
+      // We use the absolute difference to determine speed.
+      const velocity = Math.abs(diff);
+      
+      // Stretch Factor: Adjust this to make it more/less jelly-like
+      // Logic: Moving fast = Tall & Thin.
+      const stretchAmount = Math.min(velocity * 0.02, 0.6); // Cap deformation at 60%
+      
+      const scaleY = 1 + stretchAmount;       // Get taller
+      const scaleX = 1 - (stretchAmount * 0.4); // Get thinner (volume conservation)
+
+      // 4. Apply Transforms
+      // We use translate3d for hardware acceleration
+      // Note: We translate Y negatively because 0 is at the bottom in our logic, 
+      // but CSS translate Y goes down.
+      knobRef.current.style.transform = `translate(-50%, ${-s.currentY}px) scale(${scaleX}, ${scaleY})`;
+      
+      // Update the cyan fill bar
+      if (containerRef.current) {
+        const percent = (s.currentY / containerRef.current.clientHeight) * 100;
+        trackFillRef.current.style.height = `${percent}%`;
+      }
+
+      animationFrameId = requestAnimationFrame(loop);
+    };
+
+    loop();
+    return () => cancelAnimationFrame(animationFrameId);
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center gap-6 h-64 w-full relative z-10">
+      
+      {/* 1. SIZE PREVIEW (Top) - Lower Z-Index */}
+      <div className="w-16 h-16 flex items-center justify-center relative shrink-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 border border-white/10 rounded-xl" />
+        <div 
+          className="rounded-full bg-white shadow-[0_0_15px_rgba(255,255,255,0.5)] transition-all duration-75"
+          style={{ width: `${value}px`, height: `${value}px` }}
+        />
+        <span className="absolute -top-6 text-[10px] text-zinc-500 font-bold tracking-widest">
+          SIZE
+        </span>
+      </div>
+
+      {/* 2. THE SLIDER TRACK - Higher Z-Index */}
+      <div className="relative flex-1 w-12 flex justify-center z-50" ref={containerRef}>
+        
+        {/* Track Line */}
+        <div className="absolute top-0 bottom-0 w-1 bg-zinc-800 rounded-full" />
+        
+        {/* Fill Line (Cyan) */}
+        <div 
+          ref={trackFillRef}
+          className="absolute bottom-0 w-1 bg-cyan-500 rounded-full"
+          style={{ height: '0%' }}
+        />
+
+        {/* The Physics Knob (Visual Only) */}
+        {/* Positioned at bottom: 0, left: 50%. Moved via JS transform. */}
+        <div 
+          ref={knobRef}
+          className="absolute bottom-0 left-1/2 w-5 h-5 bg-cyan-400 rounded-full shadow-[0_0_20px_rgba(6,182,212,0.8)] pointer-events-none"
+          style={{ transformOrigin: 'center center' }} 
+        />
+
+        {/* The Invisible Input (The Interaction Layer) */}
+        {/* -inset-4 expands the hit area by 1rem (16px) in all directions */}
+        <input 
+          type="range" 
+          min={min} 
+          max={max} 
+          value={value} 
+          onInput={(e) => onChange(parseInt(e.target.value))}
+          className="absolute -inset-4 opacity-0 cursor-pointer w-auto h-auto z-50"
+          style={{ 
+            writingMode: 'vertical-lr', 
+            direction: 'rtl', 
+            appearance: 'slider-vertical',
+            margin: 0
+          }} 
+        />
+      </div>
+      
+      {/* Value Display */}
+      <span className="text-xs font-mono text-zinc-500">{value}px</span>
+    </div>
+  );
+};
+
+export default SquishySlider;
+
+----------------------------------------
+FILE: src\components\ToolPicker.jsx
+----------------------------------------
+import React, { useState, useEffect, useRef } from 'react';
+import { TOOLS } from '../constants/tools';
+
+export default function ToolPicker({ currentTool, onSelect, onPin, pinnedIds = [] }) {
+  const [activeIndex, setActiveIndex] = useState(1);
+  const containerRef = useRef(null);
+
+  // Sync internal state with active tool
+  useEffect(() => {
+    const idx = TOOLS.findIndex(t => 
+      t.id === currentTool || (t.options && t.options.find(o => o.id === currentTool))
+    );
+    if (idx !== -1) setActiveIndex(idx);
+  }, [currentTool]);
+
+  const handleWheel = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.deltaY > 0) setActiveIndex(prev => Math.min(prev + 1, TOOLS.length - 1));
+    else setActiveIndex(prev => Math.max(prev - 1, 0));
+  };
+
+  useEffect(() => {
+    const tool = TOOLS[activeIndex];
+    // Auto-select the main option if a sub-option isn't already active
+    if (tool.options) {
+      const isAlreadyActive = tool.options.some(opt => opt.id === currentTool);
+      if (!isAlreadyActive) onSelect(tool.options[0].id);
+    } else {
+      onSelect(tool.id);
+    }
+  }, [activeIndex]);
+
+  const canPin = (id) => !pinnedIds.includes(id) && pinnedIds.length < 5;
+
+  return (
+    <div className="flex flex-row-reverse items-center h-[500px]"> 
+      {/* SCROLL BAR */}
+      <div className="h-48 w-1 bg-white/10 rounded-full ml-4 relative overflow-hidden">
+        <div 
+          className="absolute w-full bg-cyan-500 transition-all duration-300 rounded-full"
+          style={{ 
+            height: `${Math.max(10, 100 / TOOLS.length)}%`, 
+            top: `${(activeIndex / (TOOLS.length - 1)) * (100 - (Math.max(10, 100 / TOOLS.length)))}%` 
+          }}
+        />
+      </div>
+
+      {/* CAROUSEL */}
+      <div 
+        ref={containerRef}
+        onWheel={handleWheel}
+        className="relative w-20 h-full flex items-center justify-center select-none"
+      >
+        {TOOLS.map((tool, index) => {
+          const distance = index - activeIndex;
+          const absDist = Math.abs(distance);
+          const isActive = distance === 0;
+          
+          // --- VISIBILITY FIX ---
+          // We allow distance 3 to render (opacity 0) so it can fade in.
+          // Cutoff is now anything > 3.
+          if (absDist > 3) return null;
+
+          let translateY = distance * 85; 
+          
+          // Scale: Gradual shrink
+          let scale = isActive ? 1.1 : Math.max(0.6, 1.0 - (absDist * 0.1));
+          
+          // Opacity Fix: Ensure it reaches exactly 0 at distance 3
+          // Dist 0 = 1.0
+          // Dist 1 = 0.67
+          // Dist 2 = 0.33
+          // Dist 3 = 0.0 (Invisible but present for transition)
+          let opacity = isActive ? 1 : Math.max(0, 1 - (absDist * 0.33));
+          
+          let zIndex = 10 - absDist;
+
+          return (
+            <div
+              key={tool.id}
+              onClick={() => setActiveIndex(index)}
+              className="absolute transition-all duration-300 ease-out flex items-center justify-center group/main"
+              style={{
+                transform: `translateY(${translateY}px) scale(${scale})`,
+                opacity,
+                zIndex,
+                // Only allow interactions with the main 3 items to prevent accidental clicks on fading items
+                pointerEvents: absDist >= 2 ? 'none' : 'auto' 
+              }}
+            >
+              {/* MAIN ICON */}
+              <div className={`
+                  w-16 h-16 rounded-2xl flex items-center justify-center border-2 transition-colors duration-300 relative
+                  ${isActive 
+                    ? 'bg-cyan-500/20 border-cyan-400 text-cyan-100 shadow-[0_0_15px_rgba(6,182,212,0.4)]' 
+                    : 'bg-zinc-800/80 border-zinc-700 text-zinc-500 hover:border-zinc-500'}
+                `}>
+                <div className="w-8 h-8">{tool.icon}</div>
+
+                {/* PIN BUTTON */}
+                {isActive && !tool.options && canPin(tool.id) && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onPin(tool.id); }}
+                    className="absolute -top-2 -left-2 w-6 h-6 bg-zinc-700 hover:bg-cyan-600 rounded-full text-white text-[10px] flex items-center justify-center shadow opacity-0 group-hover/main:opacity-100 transition-opacity"
+                    title="Pin Tool"
+                  >
+                    +
+                  </button>
+                )}
+              </div>
+
+              {/* POP-OUT OPTIONS (Active Item Only) */}
+              {isActive && tool.options && (
+                <div className="absolute right-[110%] flex flex-row-reverse gap-2 pointer-events-none">
+                  {tool.options.map((opt, i) => (
+                    <div key={opt.id} className="relative group/sub pointer-events-auto">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onSelect(opt.id); }}
+                        className={`
+                          flex items-center justify-center w-12 h-12 rounded-xl border-2 transition-all duration-300
+                          ${currentTool === opt.id 
+                            ? 'bg-cyan-500 text-white border-cyan-400 scale-105 shadow-md' 
+                            : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:bg-zinc-800'}
+                        `}
+                        style={{
+                          animation: `popOut 0.3s ease-out ${i * 0.05}s forwards`,
+                          opacity: 0,
+                          transform: 'translateX(20px)' 
+                        }}
+                      >
+                        <div className="scale-75 w-6 h-6">{opt.icon}</div>
+                      </button>
+
+                      {/* PIN BUTTON (Sub-options) */}
+                      {canPin(opt.id) && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onPin(opt.id); }}
+                          className="absolute -top-2 -left-2 w-5 h-5 bg-zinc-700 hover:bg-cyan-600 rounded-full text-white text-[10px] flex items-center justify-center shadow opacity-0 group-hover/sub:opacity-100 transition-opacity z-50"
+                          title="Pin Tool"
+                        >
+                          +
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+----------------------------------------
+FILE: src\constants\tools.jsx
+----------------------------------------
+import React from 'react';
+import { 
+  MousePointer2, 
+  Pencil, 
+  Eraser, 
+  Trash2, 
+  ImagePlus, 
+  Divide, 
+  Square, 
+  Circle, 
+  Feather,
+  Shapes,
+  Minus,    // <--- For Single Line
+  Activity  // <--- For Multi-Line
+} from 'lucide-react';
+
+export const TOOLS = [
+  { 
+    id: 'MOVE', 
+    label: 'Move', 
+    icon: <MousePointer2 className="w-full h-full" strokeWidth={1.5} /> 
+  },
+  { 
+    id: 'PEN', 
+    label: 'Pen', 
+    icon: <Pencil className="w-full h-full" strokeWidth={1.5} /> 
+  },
+  { 
+    id: 'CALLIGRAPHY', 
+    label: 'Calligraphy', 
+    icon: <Feather className="w-full h-full" strokeWidth={1.5} /> 
+  },
+  // --- NEW LINE TOOLS ---
+  {
+    id: 'LINE_GROUP',
+    label: 'Lines',
+    icon: <Minus className="w-full h-full -rotate-45" strokeWidth={1.5} />,
+    options: [
+      {
+        id: 'LINE_SINGLE',
+        label: 'Single Line',
+        icon: <Minus className="w-full h-full -rotate-45" strokeWidth={1.5} />
+      },
+      {
+        id: 'LINE_MULTI',
+        label: 'Multi Line',
+        icon: <Activity className="w-full h-full" strokeWidth={1.5} />
+      }
+    ]
+  },
+  { 
+    id: 'SHAPE_GROUP', 
+    label: 'Shapes', 
+    icon: <Shapes className="w-full h-full" strokeWidth={1.5} />,
+    options: [
+      { 
+        id: 'RECT_HOLLOW', 
+        label: 'Rectangle', 
+        icon: <Square className="w-full h-full" strokeWidth={1.5} /> 
+      },
+      { 
+        id: 'RECT_FILLED', 
+        label: 'Filled Rect', 
+        icon: <Square className="w-full h-full fill-current" strokeWidth={1.5} /> 
+      },
+      { 
+        id: 'ELLIPSE_HOLLOW', 
+        label: 'Ellipse', 
+        icon: <Circle className="w-full h-full" strokeWidth={1.5} /> 
+      },
+      { 
+        id: 'ELLIPSE_FILLED', 
+        label: 'Filled Circle', 
+        icon: <Circle className="w-full h-full fill-current" strokeWidth={1.5} /> 
+      }
+    ]
+  },
+  { 
+    id: 'ERASER_GROUP', 
+    label: 'Eraser', 
+    icon: <Eraser className="w-full h-full" strokeWidth={1.5} />,
+    options: [
+      { 
+        id: 'WHITE_ERASER', 
+        label: 'Standard', 
+        icon: <div className="w-full h-full rounded-full border-2 border-current" /> 
+      },
+      { 
+        id: 'STROKE_ERASER', 
+        label: 'Stroke', 
+        icon: <Trash2 className="w-full h-full" strokeWidth={1.5} /> 
+      }
+    ]
+  },
+  { 
+    id: 'SYMMETRY', 
+    label: 'Symmetry', 
+    icon: <Divide className="w-full h-full" strokeWidth={1.5} /> 
+  },
+  { 
+    id: 'TRACE', 
+    label: 'Trace', 
+    icon: <ImagePlus className="w-full h-full" strokeWidth={1.5} /> 
+  },
+];
+
+export const getToolById = (id) => {
+  for (const tool of TOOLS) {
+    if (tool.id === id) return tool;
+    if (tool.options) {
+      const sub = tool.options.find(opt => opt.id === id);
+      if (sub) return sub;
+    }
+  }
+  return null;
+};
+
+----------------------------------------
+FILE: src\hooks\useCanvasTools.js
+----------------------------------------
+import { useEffect, useRef } from 'react';
+import { fabric } from 'fabric';
+import { reflectPoint } from '../utils/geometry';
+import { createDynamicBrush } from '../utils/dynamicBrush';
+
+export const useCanvasTools = ({
+  fabricRef,
+  tool,
+  brushSize,
+  currentColor,
+  symmetry,
+  saveHistory,
+  lockedRef,
+  traceImageObj
+}) => {
+  
+  const activeShapeRef = useRef(null);  // For Shapes & Single Lines
+  const shapeStartRef = useRef(null);   // Start coord for drag operations
+  
+  // -- MULTI-LINE STATE --
+  const polylineRef = useRef(null);     // The main polyline object being built
+  const rubberBandRef = useRef(null);   // The "ghost" line following the cursor
+  
+  // -- ERASER STATE --
+  const isErasingRef = useRef(false);   // Track if we are currently dragging-to-delete
+
+  // --- HELPER: SYMMETRY GENERATION ---
+  const generateSymmetry = (obj) => {
+    if (!symmetry || !symmetry.locked || !obj || !fabricRef.current) return;
+    const canvas = fabricRef.current;
+
+    let twin;
+    
+    // 1. Line Symmetry
+    if (obj.type === 'line') {
+      // Reflect endpoints
+      const p1 = reflectPoint({ x: obj.x1, y: obj.y1 }, symmetry);
+      const p2 = reflectPoint({ x: obj.x2, y: obj.y2 }, symmetry);
+      
+      twin = new fabric.Line([p1.x, p1.y, p2.x, p2.y], {
+        fill: obj.fill,
+        stroke: obj.stroke,
+        strokeWidth: obj.strokeWidth,
+        strokeLineCap: obj.strokeLineCap,
+        selectable: false,
+        evented: false,
+      });
+    } 
+    // 2. Polyline Symmetry
+    else if (obj.type === 'polyline') {
+      // Reflect all points
+      const newPoints = obj.points.map(p => reflectPoint(p, symmetry));
+      
+      twin = new fabric.Polyline(newPoints, {
+        fill: obj.fill,
+        stroke: obj.stroke,
+        strokeWidth: obj.strokeWidth,
+        strokeLineCap: obj.strokeLineCap,
+        strokeLineJoin: obj.strokeLineJoin,
+        selectable: false,
+        evented: false,
+        objectCaching: false
+      });
+    }
+    // 3. Rect/Ellipse Symmetry
+    else if (obj.type === 'rect' || obj.type === 'ellipse') {
+      // Reflect the center point
+      const center = obj.getCenterPoint();
+      const newCenter = reflectPoint(center, symmetry);
+      
+      // Calculate reflected angle: 2 * symmetryAngle - objAngle
+      // (This works for simple reflections of rotation)
+      const symAngleRad = (symmetry.angle * Math.PI) / 180;
+      // Convert object angle to 0-360 range for math safety
+      const objAngle = obj.angle || 0;
+      const newAngle = (2 * symmetry.angle) - objAngle;
+
+      // Clone properties
+      // Note: We use specific constructors instead of obj.clone() to avoid async issues
+      const options = {
+        left: newCenter.x,
+        top: newCenter.y,
+        angle: newAngle,
+        width: obj.width,
+        height: obj.height,
+        rx: obj.rx, // for ellipse
+        ry: obj.ry, // for ellipse
+        fill: obj.fill,
+        stroke: obj.stroke,
+        strokeWidth: obj.strokeWidth,
+        originX: 'center', // Important: Position by center for rotation math to work
+        originY: 'center',
+        selectable: false,
+        evented: false
+      };
+
+      if (obj.type === 'rect') twin = new fabric.Rect(options);
+      else twin = new fabric.Ellipse(options);
+    }
+
+    if (twin) {
+      canvas.add(twin);
+    }
+  };
+
+  // --- 1. HANDLE TOOL SWITCHING & CLEANUP ---
+  useEffect(() => {
+    const canvas = fabricRef.current;
+    if (!canvas) return;
+
+    // A. CLEANUP MULTI-LINE
+    if (rubberBandRef.current) {
+      canvas.remove(rubberBandRef.current);
+      rubberBandRef.current = null;
+      
+      // If we have a valid polyline, finalize it and reflect it
+      if (polylineRef.current) {
+        // Ensure coords are baked
+        polylineRef.current._calcDimensions();
+        polylineRef.current.setCoords();
+        
+        generateSymmetry(polylineRef.current);
+        
+        if (!lockedRef.current) saveHistory();
+        polylineRef.current = null;
+      }
+    }
+
+    // B. SETUP NEW TOOL
+    canvas.getObjects().forEach(obj => {
+      if (obj === traceImageObj) return;
+      if (tool === 'MOVE') {
+        obj.selectable = true;
+        obj.evented = true;
+      } else if (tool === 'STROKE_ERASER') {
+        obj.selectable = false;
+        obj.evented = true; // Needs to be evented for findTarget to work comfortably
+      } else {
+        obj.selectable = false;
+        obj.evented = false;
+      }
+    });
+
+    // Reset settings
+    canvas.isDrawingMode = false; 
+    canvas.selection = false;
+
+    if (tool === 'PEN') {
+      canvas.isDrawingMode = true;
+      canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
+      canvas.freeDrawingBrush.color = currentColor;
+      canvas.freeDrawingBrush.width = brushSize;
+      canvas.defaultCursor = 'default';
+    } 
+    else if (tool === 'CALLIGRAPHY') {
+      canvas.isDrawingMode = true;
+      canvas.freeDrawingBrush = createDynamicBrush(canvas);
+      canvas.freeDrawingBrush.color = currentColor;
+      canvas.freeDrawingBrush.width = brushSize * 1.5;
+      canvas.defaultCursor = 'default';
+    }
+    else if (tool === 'WHITE_ERASER') {
+      canvas.isDrawingMode = true;
+      canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
+      canvas.freeDrawingBrush.color = '#ffffff';
+      canvas.freeDrawingBrush.width = brushSize;
+      canvas.defaultCursor = 'default';
+    } 
+    else if (tool === 'MOVE') {
+      canvas.selection = true;
+      canvas.defaultCursor = 'move';
+    }
+    else if (tool === 'STROKE_ERASER') {
+      canvas.defaultCursor = 'crosshair';
+    } 
+    else if (tool.includes('RECT') || tool.includes('ELLIPSE') || tool.includes('LINE')) {
+      canvas.defaultCursor = 'crosshair';
+    } 
+    else {
+      canvas.defaultCursor = 'default';
+    }
+    
+    canvas.requestRenderAll();
+  }, [tool, currentColor, brushSize, traceImageObj, fabricRef]); 
+
+
+  // --- 2. MOUSE EVENT HANDLERS ---
+  useEffect(() => {
+    const canvas = fabricRef.current;
+    if (!canvas) return;
+
+    // --- MOUSE DOWN ---
+    const onMouseDown = (o) => {
+      const pointer = canvas.getPointer(o.e);
+
+      // A. Eraser (Click)
+      if (tool === 'STROKE_ERASER') {
+        const target = o.target; 
+        if (target) {
+          canvas.remove(target);
+          canvas.requestRenderAll();
+          if (!lockedRef.current) saveHistory();
+        }
+        return;
+      }
+
+      // B. Single Line / Shapes (Drag Start)
+      if (['RECT_HOLLOW', 'RECT_FILLED', 'ELLIPSE_HOLLOW', 'ELLIPSE_FILLED', 'LINE_SINGLE'].includes(tool)) {
+        canvas.isDrawingMode = false;
+        shapeStartRef.current = { x: pointer.x, y: pointer.y };
+        
+        let shape;
+        const commonProps = {
+          left: pointer.x,
+          top: pointer.y,
+          stroke: currentColor,
+          strokeWidth: brushSize,
+          fill: 'transparent',
+          selectable: false,
+          evented: false,
+          originX: 'left',
+          originY: 'top'
+        };
+
+        if (tool === 'LINE_SINGLE') {
+          shape = new fabric.Line([pointer.x, pointer.y, pointer.x, pointer.y], {
+            ...commonProps,
+            strokeLineCap: 'round'
+          });
+        } else if (tool.includes('RECT')) {
+          shape = new fabric.Rect({ ...commonProps, width: 0, height: 0 });
+        } else if (tool.includes('ELLIPSE')) {
+          shape = new fabric.Ellipse({ ...commonProps, rx: 0, ry: 0 });
+        }
+
+        if (tool.includes('FILLED')) {
+          shape.set({ fill: currentColor, strokeWidth: 0 });
+        }
+
+        activeShapeRef.current = shape;
+        canvas.add(shape);
+      }
+
+      // C. Multi-Line (Click to Segment)
+      if (tool === 'LINE_MULTI') {
+        if (!polylineRef.current) {
+          // Start new
+          const points = [{ x: pointer.x, y: pointer.y }, { x: pointer.x, y: pointer.y }];
+          const polyline = new fabric.Polyline(points, {
+            stroke: currentColor,
+            strokeWidth: brushSize,
+            fill: 'transparent',
+            strokeLineCap: 'round',
+            strokeLineJoin: 'round',
+            selectable: false,
+            evented: false,
+            objectCaching: false
+          });
+          polylineRef.current = polyline;
+          canvas.add(polyline);
+
+          // Rubber band
+          const rubberBand = new fabric.Line([pointer.x, pointer.y, pointer.x, pointer.y], {
+            stroke: currentColor,
+            strokeWidth: 1,
+            strokeDashArray: [5, 5],
+            opacity: 0.5,
+            selectable: false,
+            evented: false
+          });
+          rubberBandRef.current = rubberBand;
+          canvas.add(rubberBand);
+        } 
+        else {
+          // Continue existing
+          const poly = polylineRef.current;
+          const points = poly.points;
+          points.push({ x: pointer.x, y: pointer.y });
+          if (rubberBandRef.current) {
+            rubberBandRef.current.set({ x1: pointer.x, y1: pointer.y, x2: pointer.x, y2: pointer.y });
+          }
+          
+          poly.set({ points: points, dirty: true });
+          poly._calcDimensions();
+          poly.setCoords();
+          
+          canvas.requestRenderAll();
+        }
+      }
+    };
+
+    // --- MOUSE MOVE ---
+    const onMouseMove = (o) => {
+      const pointer = canvas.getPointer(o.e);
+
+      // A. DRAG ERASER (Drag to delete)
+      if (tool === 'STROKE_ERASER' && o.e.buttons === 1) {
+        const target = canvas.findTarget(o.e);
+        if (target && target !== traceImageObj) { 
+           canvas.remove(target);
+           canvas.requestRenderAll();
+           isErasingRef.current = true; 
+        }
+        return;
+      }
+
+      // B. Dragging Shapes
+      if (activeShapeRef.current && shapeStartRef.current) {
+        const start = shapeStartRef.current;
+        const shape = activeShapeRef.current;
+        
+        if (shape.type === 'line') {
+          let targetX = pointer.x;
+          let targetY = pointer.y;
+
+          if (o.e.shiftKey) {
+            const dx = pointer.x - start.x;
+            const dy = pointer.y - start.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            const snap = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) * (Math.PI / 4);
+            targetX = start.x + Math.cos(snap) * dist;
+            targetY = start.y + Math.sin(snap) * dist;
+          }
+          shape.set({ x2: targetX, y2: targetY });
+        }
+        else {
+          let w = Math.abs(pointer.x - start.x);
+          let h = Math.abs(pointer.y - start.y);
+
+          if (o.e.shiftKey) {
+            const dim = Math.max(w, h);
+            w = dim; h = dim;
+          }
+
+          const left = pointer.x < start.x ? pointer.x : start.x;
+          const top = pointer.y < start.y ? pointer.y : start.y;
+          
+          if (shape.type === 'rect') {
+            shape.set({ width: w, height: h, left, top });
+          } else if (shape.type === 'ellipse') {
+            shape.set({ rx: w/2, ry: h/2, left, top });
+          }
+        }
+        canvas.requestRenderAll();
+      }
+
+      // C. Multi-Line Rubber Band
+      if (tool === 'LINE_MULTI' && rubberBandRef.current) {
+        rubberBandRef.current.set({ x2: pointer.x, y2: pointer.y });
+        canvas.requestRenderAll();
+      }
+    };
+
+    // --- MOUSE UP ---
+    const onMouseUp = () => {
+      // A. Finish Eraser Drag
+      if (isErasingRef.current) {
+        if (!lockedRef.current) saveHistory();
+        isErasingRef.current = false;
+      }
+
+      // B. Finish Shapes / Single Line
+      if (activeShapeRef.current) {
+        activeShapeRef.current.setCoords();
+        generateSymmetry(activeShapeRef.current);
+        if (!lockedRef.current) saveHistory();
+        activeShapeRef.current = null;
+        shapeStartRef.current = null;
+      }
+    };
+
+    // --- PATH CREATED (Pen/Calligraphy) ---
+    const onPathCreated = (e) => {
+      if (!lockedRef.current) saveHistory();
+      if (symmetry && symmetry.locked) {
+        const path = e.path;
+        if (!path) return;
+        const originalPoints = path.path; 
+        const reflectedPathData = originalPoints.map(cmd => {
+          const newCmd = [...cmd];
+          for (let i = 1; i < newCmd.length; i += 2) {
+            const p = { x: newCmd[i], y: newCmd[i+1] };
+            const ref = reflectPoint(p, symmetry);
+            newCmd[i] = ref.x;
+            newCmd[i+1] = ref.y;
+          }
+          return newCmd;
+        });
+        const reflectedPath = new fabric.Path(reflectedPathData, {
+          fill: path.fill,
+          stroke: path.stroke,
+          strokeWidth: path.strokeWidth,
+          strokeLineCap: path.strokeLineCap,
+          strokeLineJoin: path.strokeLineJoin,
+          objectCaching: false,
+          selectable: false,
+          evented: false,
+        });
+
+        lockedRef.current = true; 
+        canvas.add(reflectedPath);
+        lockedRef.current = false;
+      }
+    };
+
+    // --- OBJECT MODIFIED (Transforms) ---
+    // This definition MUST be here before we use it below
+    const onObjectModified = (e) => {
+        // If the modified object is the trace image, DO NOT save history
+        if (e.target && e.target.isTraceImage) return;
+        if (!lockedRef.current) saveHistory();
+    };
+
+    // --- ATTACH LISTENERS ---
+    canvas.on('mouse:down', onMouseDown);
+    canvas.on('mouse:move', onMouseMove);
+    canvas.on('mouse:up', onMouseUp);
+    canvas.on('path:created', onPathCreated);
+    canvas.on('object:modified', onObjectModified); // <--- ATTACH
+
+    // --- CLEANUP ---
+    return () => {
+      canvas.off('mouse:down', onMouseDown);
+      canvas.off('mouse:move', onMouseMove);
+      canvas.off('mouse:up', onMouseUp);
+      canvas.off('path:created', onPathCreated);
+      canvas.off('object:modified', onObjectModified); // <--- DETACH
+    };
+  }, [tool, currentColor, brushSize, symmetry, saveHistory, fabricRef]);
+
+  return {};
+};
+
+----------------------------------------
+FILE: src\hooks\useHistory.js
+----------------------------------------
+// src/hooks/useHistory.js
+import { useState, useRef, useCallback } from 'react';
+
+export const useHistory = (fabricRef) => {
+  const [history, setHistory] = useState([]);
+  const [redoStack, setRedoStack] = useState([]);
+  const lockedRef = useRef(false);
+
+  // Initialize history (call this once canvas is ready)
+  const initHistory = useCallback(() => {
+    if (!fabricRef.current) return;
+    const json = JSON.stringify(fabricRef.current.toJSON());
+    setHistory([json]);
+  }, [fabricRef]);
+
+  // Save current state
+  const saveHistory = useCallback(() => {
+    if (lockedRef.current || !fabricRef.current) return;
+    const json = JSON.stringify(fabricRef.current.toJSON());
+    setHistory(prev => {
+      // Dedup: Don't save if identical to last state
+      if (prev.length > 0 && prev[prev.length - 1] === json) return prev;
+      return [...prev, json];
+    });
+    setRedoStack([]); 
+  }, [fabricRef]);
+
+  const undo = useCallback((currentTool) => {
+    if (history.length <= 1 || !fabricRef.current) return;
+    lockedRef.current = true;
+
+    // 1. RESCUE TRACE IMAGE
+    const traceImg = fabricRef.current.getObjects().find(obj => obj.isTraceImage);
+
+    const currentState = history[history.length - 1]; 
+    const previousState = history[history.length - 2]; 
+    
+    setRedoStack(prev => [currentState, ...prev]);
+    setHistory(prev => prev.slice(0, -1));
+
+    fabricRef.current.loadFromJSON(previousState, () => {
+      // 2. RESTORE TRACE IMAGE
+      if (traceImg) {
+        fabricRef.current.add(traceImg);
+        // Ensure it stays at the correct index (usually bottom or top depending on preference)
+        // fabricRef.current.sendToBack(traceImg); 
+      }
+
+      fabricRef.current.renderAll();
+      
+      const isDrawing = currentTool === "PEN" || currentTool === "WHITE_ERASER" || currentTool === "CALLIGRAPHY";
+      fabricRef.current.isDrawingMode = isDrawing;
+      fabricRef.current.selection = (currentTool === "MOVE");
+      lockedRef.current = false;
+    });
+  }, [history, fabricRef]);
+
+  const redo = useCallback((currentTool) => {
+    if (redoStack.length === 0 || !fabricRef.current) return;
+    lockedRef.current = true;
+
+    // 1. RESCUE TRACE IMAGE
+    const traceImg = fabricRef.current.getObjects().find(obj => obj.isTraceImage);
+
+    const nextState = redoStack[0];
+    const newRedo = redoStack.slice(1);
+
+    setHistory(prev => [...prev, nextState]);
+    setRedoStack(newRedo);
+
+    fabricRef.current.loadFromJSON(nextState, () => {
+      // 2. RESTORE TRACE IMAGE
+      if (traceImg) {
+        fabricRef.current.add(traceImg);
+      }
+
+      fabricRef.current.renderAll();
+      const isDrawing = currentTool === "PEN" || currentTool === "WHITE_ERASER" || currentTool === "CALLIGRAPHY";
+      fabricRef.current.isDrawingMode = isDrawing;
+      fabricRef.current.selection = (currentTool === "MOVE");
+      lockedRef.current = false;
+    });
+  }, [redoStack, fabricRef]);
+
+  return {
+    history,
+    redoStack,
+    lockedRef,
+    initHistory,
+    saveHistory,
+    undo,
+    redo
+  };
+};
+
+----------------------------------------
+FILE: src\hooks\usePresence.js
+----------------------------------------
+import { useEffect } from 'react';
+import { ref, onDisconnect, set, serverTimestamp, onValue } from 'firebase/database';
+import { db } from '../firebase';
+
+export function usePresence(roomId, userId) {
+  useEffect(() => {
+    if (!roomId || !userId) return;
+
+    const userStatusRef = ref(db, `rooms/${roomId}/players/${userId}/presence`);
+    const connectedRef = ref(db, '.info/connected');
+
+    const unsubscribe = onValue(connectedRef, (snap) => {
+      if (snap.val() === true) {
+        // I am online
+        set(userStatusRef, {
+            state: 'online',
+            last_changed: serverTimestamp()
+        });
+
+        // If I disconnect, the SERVER writes this for me
+        onDisconnect(userStatusRef).set({
+            state: 'offline',
+            last_changed: serverTimestamp()
+        });
+      }
+    });
+
+    return () => unsubscribe();
+  }, [roomId, userId]);
+}
+
+----------------------------------------
+FILE: src\pages\Gallery.jsx
+----------------------------------------
+import React, { useEffect, useState } from 'react';
+import { onValue, ref } from "firebase/database";
+import { db } from "../firebase";
+import { Home, LogOut } from 'lucide-react'; // Added LogOut icon
+import { useNavigate } from 'react-router-dom'; // Import navigation
+import GalleryCanvas from '../components/GalleryCanvas';
+
+export default function Gallery({ roomId, players, onExit, currentUser }) {
+  const [books, setBooks] = useState({});
+  const navigate = useNavigate();
+
+  // Determine if I am the host
+  const isHost = players.length > 0 && currentUser?.uid === players[0].id;
+
+  useEffect(() => {
+    const booksRef = ref(db, `rooms/${roomId}/books`);
+    onValue(booksRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) setBooks(data);
+    });
+  }, [roomId]);
+
+  return (
+    <div className="h-screen w-screen bg-zinc-950 text-white flex flex-col overflow-y-auto overflow-x-hidden selection:bg-cyan-500/30">
+      
+      {/* BACKGROUND */}
+      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+         <div className="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] bg-violet-600/10 rounded-full blur-[100px]" />
+         <div className="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-cyan-600/10 rounded-full blur-[100px]" />
+      </div>
+
+      <header className="shrink-0 h-24 flex items-center justify-between px-12 z-10">
+        <div>
+          <h1 className="text-4xl font-black tracking-tighter">GALLERY</h1>
+          <p className="text-zinc-500 font-mono text-sm">ROOM: {roomId}</p>
+        </div>
+        
+        <div className="flex gap-3">
+          {/* HOST ONLY: Back to Lobby (Resets Game) */}
+          {isHost ? (
+            <button 
+              onClick={onExit}
+              className="px-6 py-2 rounded-full bg-green-500/20 border border-green-500/50 hover:bg-green-500/30 hover:shadow-[0_0_15px_rgba(34,197,94,0.3)] flex items-center gap-2 transition-all text-green-300 font-bold"
+            >
+              <Home size={18} />
+              <span>BACK TO LOBBY</span>
+            </button>
+          ) : (
+            <div className="px-6 py-2 rounded-full border border-white/5 bg-white/5 text-zinc-500 flex items-center gap-2 cursor-default">
+               <span className="animate-pulse">●</span>
+               <span>WAITING FOR HOST</span>
+            </div>
+          )}
+
+          {/* EVERYONE: Leave Room (Navigate to Home) */}
+          <button 
+            onClick={() => navigate('/')}
+            className="px-4 py-2 rounded-full border border-white/10 hover:bg-white/10 hover:border-red-500/30 hover:text-red-400 flex items-center gap-2 transition-colors text-zinc-400"
+            title="Leave Room"
+          >
+            <LogOut size={18} />
+          </button>
+        </div>
+      </header>
+
+      <main className="flex-1 p-12 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 z-10 pb-24">
+        {Object.entries(books).map(([ownerId, pages]) => {
+          const owner = players.find(p => p.id === ownerId);
+          const ownerName = owner?.name || "Unknown";
+          
+          const sortedPages = Array.isArray(pages) ? pages : Object.values(pages);
+
+          return (
+            <div key={ownerId} className="bg-zinc-900/50 border border-white/5 rounded-3xl overflow-hidden flex flex-col shadow-2xl">
+              <div className="p-6 border-b border-white/5 bg-black/20">
+                <h2 className="font-bold text-xl text-cyan-400">Book of {ownerName}</h2>
+              </div>
+              
+              <div className="flex-1 flex flex-col divide-y divide-white/5">
+                {sortedPages.map((page, idx) => (
+                  <div key={idx} className="p-6 flex flex-col gap-3">
+                    <div className="flex justify-between items-center text-xs font-mono text-zinc-500 uppercase tracking-widest">
+                      <span>Round {idx + 1}</span>
+                      <span>
+                        {players.find(p => p.id === page.author)?.name || '...'} 
+                        &nbsp;•&nbsp; 
+                        {page.type}
+                      </span>
+                    </div>
+
+                    {page.type === "PROMPT" ? (
+                      // TEXT CARD
+                      <div className="bg-black/40 border border-white/10 rounded-xl p-6 min-h-[120px] flex items-center justify-center text-center">
+                        <p className="text-xl md:text-2xl font-bold text-white/90 leading-relaxed">
+                          "{page.value}"
+                        </p>
+                      </div>
+                    ) : (
+                      // DRAWING CARD
+                      <div className="bg-zinc-900/50 rounded-xl overflow-hidden border border-white/10 aspect-video relative flex items-center justify-center">
+                         <GalleryCanvas jsonData={page.value} />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </main>
+    </div>
+  );
+}
+
+----------------------------------------
+FILE: src\pages\Game.jsx
+----------------------------------------
+// src/pages/Game.jsx
+
+import React, { useState, useEffect, useRef } from "react";
+import { onValue, ref, update } from "firebase/database";
+import { db } from "../firebase";
+import { fabric } from "fabric";
+
+// Components
+import GalleryCanvas from "../components/GalleryCanvas";
+import CanvasSelector from "../components/CanvasSelector";
+import ToolPicker from "../components/ToolPicker";
+import SquishySlider from "../components/SquishySlider";
+import PinDeck from "../components/PinDeck";
+import LiquidColorPicker from "../components/LiquidColorPicker";
+
+// Icons
+import { Undo2, Redo2, Download, Lock, Unlock, Trash2 } from 'lucide-react';
+
+// Hooks & Utils
+import { useHistory } from "../hooks/useHistory";
+import { useCanvasTools } from "../hooks/useCanvasTools";
+
+export default function Game({ roomId, players, currentUser, settings: initialSettings }) {
+
+  const [currentRound, setCurrentRound] = useState(0);
+  const [timer, setTimer] = useState(0);
+  const [submitted, setSubmitted] = useState(false);
+  const [settings, setSettings] = useState(initialSettings || {});
+  const [roundAspect, setRoundAspect] = useState(null);
+
+  // Refs
+  const canvasEl = useRef(null);
+  const fabricRef = useRef(null);
+  const containerRef = useRef(null);
+  const lastTimerEndRef = useRef(0);
+  const urgencyAudioRef = useRef(new Audio(`${import.meta.env.BASE_URL}urgencymusic.wav`));
+
+  // State
+  const [currentColor, setCurrentColor] = useState("#000000");
+  const [brushSize, setBrushSize] = useState(4);
+  const [tool, setTool] = useState("PEN");
+
+  const [symmetry, setSymmetry] = useState(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [traceUrl, setTraceUrl] = useState("");
+  const [traceImageObj, setTraceImageObj] = useState(null);
+  const [isTraceLocked, setIsTraceLocked] = useState(false);
+  const [inputText, setInputText] = useState("");
+  const [submittedData, setSubmittedData] = useState(null);
+  const [penaltyFlash, setPenaltyFlash] = useState(null);
+  const [isSynced, setIsSynced] = useState(false);
+
+  // Data from the previous player in the chain
+  const [previousData, setPreviousData] = useState(null);
+
+  // Pin Deck
+  const [pinnedTools, setPinnedTools] = useState(() => {
+    try {
+      const saved = localStorage.getItem("gartic_pinned_tools");
+      return saved ? JSON.parse(saved) : ["PEN", "WHITE_ERASER", "SYMMETRY"];
+    } catch { return ["PEN", "WHITE_ERASER", "SYMMETRY"]; }
+  });
+
+  // Hooks
+  const { history, redoStack, lockedRef, initHistory, saveHistory, undo, redo } = useHistory(fabricRef);
+
+  useCanvasTools({
+    fabricRef, tool, brushSize, currentColor, symmetry, saveHistory, lockedRef, traceImageObj
+  });
+
+  const isHost = players.length > 0 && players[0].id === currentUser?.uid;
+  const isWritingRound = settings.startMode === "DRAW" ? currentRound % 2 !== 0 : currentRound % 2 === 0;
+  const isDrawingRound = !isWritingRound;
+  
+  const activePlayers = players.filter(p => p.presence?.state !== 'offline');
+  const submittedCount = activePlayers.filter(p => p.submitted).length;
+
+  // --- 1. GAME LOGIC SYNC ---
+  useEffect(() => {
+    const roomRef = ref(db, `rooms/${roomId}`);
+    const unsub = onValue(roomRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) return;
+
+      if (data.settings) setSettings(data.settings);
+
+      setIsSynced(true);
+
+      // Sync Game State
+      if (data.status === 'PLAYING') {
+        const serverRound = data.round || 0;
+        if (serverRound !== currentRound) {
+          // NEW ROUND TRIGGERED
+          setCurrentRound(serverRound);
+          setSubmitted(false);
+          setSubmittedData(null);
+          setInputText("");
+          setRoundAspect(null);
+          setSymmetry(null);
+          setPenaltyFlash(null);
+
+          if (fabricRef.current) {
+            fabricRef.current.dispose();
+            fabricRef.current = null;
+          }
+          setTraceImageObj(null);
+          setIsTraceLocked(false);
+        }
+      }
+
+      // TIMER & PENALTY DETECTION
+      if (data.timerEnd) {
+        if (lastTimerEndRef.current && lastTimerEndRef.current - data.timerEnd > 2000) {
+            const diff = Math.round((lastTimerEndRef.current - data.timerEnd) / 1000);
+            setPenaltyFlash(`-${diff}s`);
+            setTimeout(() => setPenaltyFlash(null), 1500);
+        }
+        lastTimerEndRef.current = data.timerEnd;
+
+        const timeLeft = Math.max(0, Math.floor((data.timerEnd - Date.now()) / 1000));
+        setTimer(timeLeft);
+      } else {
+        setTimer(0);
+        lastTimerEndRef.current = 0;
+      }
+    });
+
+    // Local Timer Tick
+    const interval = setInterval(() => { setTimer(prev => prev > 0 ? prev - 1 : 0); }, 1000);
+    return () => { unsub(); clearInterval(interval); };
+  }, [roomId, currentRound]);
+
+  // --- 2. FETCH PREVIOUS ROUND DATA ---
+  useEffect(() => {
+    if (!players.length || !currentUser) return;
+    const myIndex = players.findIndex(p => p.id === currentUser.uid);
+    if (myIndex === -1) return;
+
+    const bookOwnerIndex = (myIndex + currentRound) % players.length;
+    const bookOwner = players[bookOwnerIndex];
+
+    if (!bookOwner || currentRound === 0) {
+      setPreviousData(null);
+      return;
+    }
+
+    const prevRoundIdx = currentRound - 1;
+    const pageRef = ref(db, `rooms/${roomId}/books/${bookOwner.id}/${prevRoundIdx}`);
+
+    const unsub = onValue(pageRef, (snapshot) => {
+      if (snapshot.exists()) setPreviousData(snapshot.val());
+      else setPreviousData(null);
+    });
+    return () => unsub();
+  }, [currentRound, players, currentUser, roomId]);
+
+  // --- 3. SUBMISSION HANDLER ---
+  // Defined before the effects that use it
+  const handleSubmit = async () => {
+    if (!players[0] || !currentUser) return;
+    setSubmitted(true);
+    if (traceImageObj && fabricRef.current) fabricRef.current.remove(traceImageObj);
+
+    const myIndex = players.findIndex((p) => p.id === currentUser?.uid);
+    const bookOwnerIndex = (myIndex + currentRound) % players.length;
+    const bookOwner = players[bookOwnerIndex];
+
+    let content = "";
+    let type = "";
+
+    if (isWritingRound) {
+      content = inputText;
+      type = "PROMPT";
+    } else {
+      if (fabricRef.current) {
+        const jsonOutput = fabricRef.current.toJSON();
+        jsonOutput.width = fabricRef.current.width;
+        jsonOutput.height = fabricRef.current.height;
+        content = JSON.stringify(jsonOutput);
+        setSubmittedData(jsonOutput);
+      }
+      type = "DRAWING";
+    }
+
+    const updates = {};
+    updates[`rooms/${roomId}/books/${bookOwner.id}/${currentRound}`] = { type, value: content, author: currentUser.uid, timestamp: Date.now() };
+    updates[`rooms/${roomId}/players/${currentUser.uid}/submitted`] = true;
+
+    // DYNAMIC TIMER LOGIC
+    if (settings.timerMode === "DYNAMIC") {
+      const baseTime = settings.baseTime || 60;
+      const penaltySeconds = baseTime * 0.1; 
+      
+      const currentRemaining = Math.max(0, timer);
+      let newSecondsLeft = Math.max(0, currentRemaining - penaltySeconds);
+
+      // Safety floor: Don't reduce below 25s unless already there
+      if (newSecondsLeft < 25 && currentRemaining > 25) {
+          newSecondsLeft = 25; 
+      } else if (currentRemaining <= 25) {
+          newSecondsLeft = currentRemaining; 
+      }
+      
+      updates[`rooms/${roomId}/timerEnd`] = Date.now() + (newSecondsLeft * 1000);
+    }
+
+    await update(ref(db), updates);
+  };
+
+  // --- 4. AUTO-SUBMIT EFFECT ---
+  // We moved this OUT of the onValue to avoid stale closure issues.
+  // When the timer hits 0, this effect fires with the *fresh* handleSubmit (containing fresh inputText).
+  useEffect(() => {
+    // MODIFIED: Added !isSynced check to prevent premature submission on load
+    if (isSynced && settings.timerMode === "DYNAMIC" && timer === 0 && !submitted) {
+        handleSubmit();
+    }
+  }, [timer, settings.timerMode, submitted, isSynced]);
+  // --- 5. HOST LOGIC ---
+  useEffect(() => {
+    if (!isHost) return;
+
+    const allSubmitted = activePlayers.length > 0 && activePlayers.every(p => p.submitted === true);
+    
+    if (allSubmitted) {
+      const updates = {};
+      const nextRound = currentRound + 1;
+
+      if (nextRound >= players.length) {
+        updates[`rooms/${roomId}/status`] = "GALLERY";
+        update(ref(db), updates);
+        return;
+      }
+
+      updates[`rooms/${roomId}/round`] = nextRound;
+      players.forEach(p => { updates[`rooms/${roomId}/players/${p.id}/submitted`] = null; });
+
+      if (settings.timerMode === "DYNAMIC") {
+        const baseTime = settings.baseTime || 60;
+        updates[`rooms/${roomId}/timerEnd`] = Date.now() + (baseTime * 1000);
+      }
+
+      update(ref(db), updates);
+    }
+  }, [players, isHost, roomId, currentRound, settings, activePlayers]); // Removed timer dep here to let clients handle their own submission
+
+  // --- 6. CANVAS INIT ---
+  useEffect(() => {
+    if (!canvasEl.current || !containerRef.current || !isDrawingRound || submitted || !roundAspect) return;
+
+    const canvas = new fabric.Canvas(canvasEl.current, {
+      isDrawingMode: true,
+      backgroundColor: "#ffffff",
+      preserveObjectStacking: true,
+    });
+    fabricRef.current = canvas;
+    initHistory();
+
+    const handleResize = () => {
+      if (!containerRef.current || !fabricRef.current) return;
+      const { clientWidth, clientHeight } = containerRef.current;
+      if (clientWidth === 0 || clientHeight === 0) return;
+
+      let aspect = roundAspect || 1;
+      let w = clientWidth;
+      let h = clientWidth / aspect;
+
+      if (h > clientHeight) { h = clientHeight; w = clientHeight * aspect; }
+      w = w * 0.95; h = h * 0.95;
+
+      fabricRef.current.setDimensions({ width: w, height: h });
+      fabricRef.current.renderAll();
+    };
+
+    const resizeObserver = new ResizeObserver(() => handleResize());
+    resizeObserver.observe(containerRef.current);
+    handleResize();
+
+    return () => {
+      resizeObserver.disconnect();
+      if (fabricRef.current) {
+        fabricRef.current.dispose();
+        fabricRef.current = null;
+      }
+    };
+  }, [roundAspect, currentRound, isDrawingRound, submitted]);
+
+  useEffect(() => {
+    // 1. Trigger Music at 20s mark
+    // Only in Drawing rounds, if round is long enough, and we are synced
+    if (
+      isSynced &&
+      isDrawingRound &&
+      timer === 20 &&
+      (settings.baseTime || 60) >= 45
+    ) {
+      urgencyAudioRef.current.play().catch((e) => console.error("Audio play failed:", e));
+    }
+
+    // 2. Cleanup / Cutoff Logic
+    // If the round changes (currentRound changes) or we submit early
+    return () => {
+      // We perform this check in the cleanup of the effect or when dependencies change.
+      // However, we specifically want to catch the "Round End" event.
+    };
+  }, [timer, isSynced, isDrawingRound, settings.baseTime]);
+
+  // Separate effect to handle Round Transitions/Early Stopping
+  useEffect(() => {
+     // If the round number changes, check if we need to cut the music
+     const audio = urgencyAudioRef.current;
+     if (!audio || audio.paused) return;
+
+     // Logic: If the timer was NOT near zero (e.g., > 1s) when the round moved on,
+     // it means we finished early -> Fade it out.
+     // If timer WAS <= 1s, we let it finish naturally (the 1s trail off).
+     if (timer > 1) {
+        stopUrgencyMusic(true); // True = Fade out
+     }
+     
+  }, [currentRound]); // Runs whenever we advance to the next round
+
+  // --- 7. EVENT WRAPPERS ---
+  const handlePinTool = (id) => { if (!pinnedTools.includes(id) && pinnedTools.length < 5) setPinnedTools([...pinnedTools, id]); };
+  const handleUnpinTool = (id) => setPinnedTools(pinnedTools.filter(t => t !== id));
+  useEffect(() => { localStorage.setItem("gartic_pinned_tools", JSON.stringify(pinnedTools)); }, [pinnedTools]);
+
+  const handleSymmetryWheel = (e) => {
+    if (tool !== "SYMMETRY" || (symmetry && symmetry.locked)) return;
+    setSymmetry(prev => {
+      let currentAngle = prev ? prev.angle : 90;
+      let delta = e.deltaY > 0 ? 5 : -5;
+      if (e.shiftKey) {
+        delta = e.deltaY > 0 ? 15 : -15;
+        const raw = currentAngle + delta;
+        return { ...prev, angle: Math.round(raw / 15) * 15 };
+      }
+      return { ...prev, angle: currentAngle + delta };
+    });
+  };
+
+  // --- AUDIO HELPER ---
+  const stopUrgencyMusic = (fade = false) => {
+    const audio = urgencyAudioRef.current;
+    if (!audio) return;
+
+    if (fade) {
+      // Quick fade out (e.g. when finishing early)
+      const fadeInterval = setInterval(() => {
+        if (audio.volume > 0.1) {
+          audio.volume -= 0.1;
+        } else {
+          clearInterval(fadeInterval);
+          audio.pause();
+          audio.currentTime = 0;
+          audio.volume = 1.0; // Reset for next time
+        }
+      }, 50); // Drop 10% volume every 50ms
+    } else {
+      // Instant stop
+      audio.pause();
+      audio.currentTime = 0;
+      audio.volume = 1.0;
+    }
+  };
+
+  const handleCanvasClick = (e) => {
+    if (tool !== "SYMMETRY" || !containerRef.current) return;
+    if (!symmetry) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setSymmetry({ x: e.clientX - rect.left, y: e.clientY - rect.top, angle: 90, locked: false });
+    } else if (!symmetry.locked) {
+      setSymmetry(prev => ({ ...prev, locked: true }));
+    }
+  };
+
+  const handleMouseMove = (e) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setMousePos({ x, y });
+    if (tool === "SYMMETRY" && symmetry && !symmetry.locked) setSymmetry(prev => ({ ...prev, x, y }));
+  };
+
+  const handleAddTraceImage = () => {
+    if (!traceUrl || !fabricRef.current) return;
+    fabric.Image.fromURL(traceUrl, (img) => {
+      if (!img) return;
+      img.set({ left: 0, top: 0, opacity: 0.5 });
+      img.scaleToWidth(fabricRef.current.width / 2);
+      img.excludeFromExport = true;
+      img.isTraceImage = true;
+      fabricRef.current.add(img);
+      fabricRef.current.setActiveObject(img);
+      setTraceImageObj(img);
+      setTraceUrl("");
+    }, { crossOrigin: 'anonymous' });
+  };
+
+  const handleRemoveTraceImage = () => {
+    if (traceImageObj && fabricRef.current) {
+      fabricRef.current.remove(traceImageObj);
+      setTraceImageObj(null);
+      setIsTraceLocked(false);
+    }
+  };
+
+  const toggleTraceLock = () => {
+    if (!traceImageObj) return;
+    const locked = !isTraceLocked;
+    setIsTraceLocked(locked);
+    traceImageObj.set({ selectable: !locked, evented: !locked, lockMovementX: locked, lockMovementY: locked, lockScalingX: locked, lockScalingY: locked });
+    fabricRef.current.discardActiveObject();
+    fabricRef.current.requestRenderAll();
+  };
+
+  const handleDownload = () => {
+    if (!fabricRef.current) return;
+    const dataURL = fabricRef.current.toDataURL({ format: 'png', quality: 1 });
+    const link = document.createElement('a');
+    link.download = `round-${currentRound}.png`;
+    link.href = dataURL;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  return (
+    <div className="h-screen w-screen bg-zinc-950 text-white flex flex-col overflow-hidden relative selection:bg-cyan-500/30">
+
+      {/* BACKGROUND */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] bg-violet-600/20 rounded-full blur-[100px] pointer-events-none z-0" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-cyan-600/20 rounded-full blur-[100px] pointer-events-none z-0" />
+
+      {/* HEADER */}
+      <header className="h-16 shrink-0 border-b border-white/10 bg-black/20 backdrop-blur-md flex items-center justify-between px-6 z-20 relative">
+        <div className="flex items-center gap-4">
+          <h1 className="font-bold text-xl tracking-tight">Round <span className="text-cyan-400">{currentRound + 1}</span></h1>
+          
+          {/* STATUS BADGE */}
+          <div className={`px-3 py-1 rounded-full text-xs font-bold border ${submitted ? "bg-green-500/20 border-green-500 text-green-400" : "bg-yellow-500/10 border-yellow-500/50 text-yellow-400"}`}>
+              {submitted ? "DONE" : "ACTING"}
+          </div>
+
+          {/* PLAYER COUNTER */}
+          <div className="px-3 py-1 rounded-full text-xs font-mono font-bold border bg-white/5 border-white/10 text-zinc-400 flex gap-2">
+              <span className="uppercase">Submitted:</span>
+              <span className={submittedCount === activePlayers.length ? "text-green-400" : "text-white"}>
+                  {submittedCount} / {activePlayers.length}
+              </span>
+          </div>
+        </div>
+        
+        {/* TIMER CONTAINER */}
+        <div className="relative">
+            <div className={`text-2xl font-black font-mono ${timer > 0 && timer < 10 ? "text-red-500 animate-pulse" : "text-white"}`}>
+                {/* FIX FOR INFINITY DISPLAY: If Dynamic mode, show 0s on expiry. If Manual, show ∞ */}
+                {settings.timerMode === "DYNAMIC" 
+                    ? `${timer}s` 
+                    : (timer > 0 ? `${timer}s` : "∞")
+                }
+            </div>
+            
+            {/* FLY-OUT PENALTY TEXT */}
+            {penaltyFlash && (
+                <div className="absolute top-0 right-full mr-4 text-red-500 font-bold text-xl animate-fly-out whitespace-nowrap pointer-events-none drop-shadow-lg">
+                    {penaltyFlash}
+                </div>
+            )}
+        </div>
+      </header>
+
+      {/* MAIN */}
+      <main className="flex-1 min-h-0 flex flex-row z-10" onWheel={handleSymmetryWheel}>
+
+        {/* COL 1: LEFT TOOLS */}
+        <div className="w-24 border-r border-white/5 bg-zinc-900/30 flex flex-col items-center justify-center gap-8 z-10 backdrop-blur-sm">
+          {isDrawingRound && !submitted && roundAspect && (
+            <>
+              <SquishySlider value={brushSize} onChange={setBrushSize} min={1} max={50} />
+              <div className="flex flex-col gap-4 mt-2">
+                <button onClick={() => undo(tool)} disabled={history.length <= 1} className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white border border-white/5"><Undo2 className="w-5 h-5" strokeWidth={1.5} /></button>
+                <button onClick={() => redo(tool)} disabled={redoStack.length === 0} className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white border border-white/5"><Redo2 className="w-5 h-5" strokeWidth={1.5} /></button>
+                <div className="h-px bg-white/10 w-full" />
+                <button onClick={handleDownload} className="w-10 h-10 rounded-full bg-cyan-900/30 flex items-center justify-center text-cyan-400 border border-cyan-500/30"><Download className="w-5 h-5" strokeWidth={1.5} /></button>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* COL 2: CANVAS AREA */}
+        <div className="flex-1 flex flex-col min-w-0 relative bg-zinc-950/20">
+
+          {/* REFERENCE HEADER: Displays prompt IF previous round was Writing */}
+          <div className="shrink-0 py-2 flex items-center justify-center min-h-[40px] z-10 pointer-events-none">
+            {currentRound > 0 && previousData?.type === "PROMPT" && (
+              <div className="flex flex-col items-center gap-1 pointer-events-auto">
+                <div className="text-lg font-bold text-white px-6 py-2 bg-black/60 rounded-full border border-white/10 shadow-lg backdrop-blur-sm truncate max-w-2xl">
+                  "{previousData.value}"
+                </div>
+                {!settings.ghostMode && (
+                  <span className="text-xs font-bold text-zinc-500 bg-black/40 px-3 py-1 rounded-full border border-white/5">
+                    {players.find(p => p.id === previousData.author)?.name || "Unknown"}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="flex-1 relative flex items-center justify-center p-4 min-h-0" ref={containerRef} onClick={handleCanvasClick} onMouseMove={handleMouseMove}>
+
+            {/* SCENE 1: CANVAS SELECTION */}
+            {isDrawingRound && !submitted && !roundAspect && (
+              <CanvasSelector onSelect={setRoundAspect} />
+            )}
+
+            {/* SCENE 2: INTERACTION (Drawing or Writing) */}
+            {(submitted || roundAspect || isWritingRound) && (
+              <>
+                {isWritingRound ? (
+                  // WRITING MODE
+                  <div className="flex flex-col items-center w-full h-full p-4 gap-6 justify-center">
+                    {previousData?.type === "DRAWING" && (
+                      <div className="relative w-full max-w-lg aspect-video bg-zinc-900/50 rounded-xl border border-white/10 overflow-hidden shadow-2xl flex items-center justify-center">
+                        {!settings.ghostMode && (
+                          <div className="absolute top-3 left-3 z-10 bg-black/60 border border-white/10 px-3 py-1 rounded-full text-xs font-bold text-white/80 shadow-lg backdrop-blur-sm">
+                            By {players.find(p => p.id === previousData.author)?.name || "Unknown"}
+                          </div>
+                        )}
+                        <GalleryCanvas jsonData={previousData.value} />
+                      </div>
+                    )}
+
+                    <textarea
+                      className="glass-input w-full max-w-2xl h-32 p-6 text-2xl resize-none rounded-2xl outline-none text-center bg-transparent border-none placeholder-zinc-700"
+                      placeholder={currentRound === 0 ? "Write a sentence to start the game..." : "What is this?"}
+                      value={inputText}
+                      onChange={(e) => setInputText(e.target.value)}
+                      disabled={submitted}
+                    />
+                  </div>
+                ) : (
+                  // DRAWING MODE
+                  roundAspect && (
+                    submitted && submittedData ? (
+                      // 1. PREVIEW MODE
+                      <div className="w-full h-full flex items-center justify-center p-4">
+                        <div className="relative w-full h-full bg-zinc-900/30 rounded-sm shadow-2xl overflow-hidden border border-white/10">
+                          <GalleryCanvas jsonData={submittedData} />
+                          <div className="absolute top-4 right-4 z-50">
+                            <span className="bg-black/80 text-white px-4 py-2 rounded-full font-bold text-xs border border-white/10 flex items-center gap-3 shadow-lg backdrop-blur-md">
+                              <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                              </span>
+                              WAITING FOR PLAYERS...
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      // 2. INTERACTIVE MODE
+                      <div key={`drawing-stage-${currentRound}`} className="relative shadow-2xl rounded-sm border border-zinc-800 group">
+                        <canvas ref={canvasEl} />
+
+                        {tool === "TRACE" && !submitted && (
+                          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 bg-zinc-900/90 border border-cyan-500/50 p-2 rounded-lg shadow-xl backdrop-blur-md">
+                            <input type="text" placeholder="Image URL..." className="bg-transparent text-xs text-white px-2 py-1 outline-none w-32 border-b border-white/20" value={traceUrl} onChange={(e) => setTraceUrl(e.target.value)} />
+                            <button onClick={handleAddTraceImage} className="text-[10px] font-bold bg-cyan-600 px-2 py-1 rounded">LOAD</button>
+                            {traceImageObj && (
+                              <>
+                                <button onClick={toggleTraceLock} className="p-1 rounded text-zinc-500 hover:text-white"><Lock className="w-4 h-4" /></button>
+                                <button onClick={handleRemoveTraceImage} className="p-1 rounded text-red-500"><Trash2 className="w-4 h-4" /></button>
+                              </>
+                            )}
+                          </div>
+                        )}
+
+                        {!submitted && (symmetry || tool === "SYMMETRY") && (
+                          <div className="absolute inset-0 pointer-events-none z-30 overflow-hidden">
+                            {(symmetry || !symmetry) && (
+                              <div className="absolute bg-cyan-500/50" style={{
+                                left: symmetry ? symmetry.x : mousePos.x,
+                                top: symmetry ? symmetry.y : mousePos.y,
+                                width: '2000px', height: '2px',
+                                transform: `translate(-50%, -50%) rotate(${symmetry ? symmetry.angle : 90}deg)`,
+                                borderTop: '2px dashed cyan'
+                              }}
+                              />
+                            )}
+                            {symmetry?.locked && tool === "SYMMETRY" && (
+                              <div className="absolute pointer-events-auto flex gap-2" style={{ left: symmetry.x + 20, top: symmetry.y - 40 }}>
+                                <button onClick={() => setSymmetry(p => ({ ...p, locked: false }))} className="p-2 bg-zinc-900 rounded-full shadow hover:text-yellow-400"><Unlock className="w-4 h-4" /></button>
+                                <button onClick={() => setSymmetry(null)} className="p-2 bg-zinc-900 rounded-full shadow hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {!submitted && (
+                          <div className="absolute bottom-0 left-0 z-50 flex items-center justify-center w-0 h-0 pointer-events-none">
+                            <div className="flex items-center justify-center w-[400px] h-[400px] -translate-x-[20px] -translate-y-[20px]">
+                              <LiquidColorPicker initialColor={{ h: 0, s: 100, l: 50, a: 1 }} onChange={(c) => setCurrentColor(`hsla(${c.h.toFixed(1)},${c.s.toFixed(1)}%,${c.l.toFixed(1)}%,${c.a.toFixed(2)})`)} />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  )
+                )}
+              </>
+            )}
+          </div>
+
+          {/* FOOTER: ACTION BUTTONS */}
+          <div className="h-auto min-h-[120px] flex flex-col items-center justify-end shrink-0 pb-6 gap-4 z-20">
+            {isDrawingRound && !submitted && roundAspect && (
+              <PinDeck pinnedIds={pinnedTools} activeToolId={tool} onSelect={setTool} onUnpin={handleUnpinTool} />
+            )}
+            {!submitted && (
+              <button onClick={handleSubmit} disabled={(isWritingRound && !inputText.trim()) || (isDrawingRound && !roundAspect)} className="px-8 py-3 font-bold bg-gradient-to-r from-violet-600 to-cyan-600 rounded-full hover:scale-105 transition-transform disabled:opacity-50 shadow-lg shadow-cyan-900/20">SUBMIT</button>
+            )}
+          </div>
+        </div>
+
+        {/* COL 3: RIGHT TOOLS */}
+        <div className="w-24 border-l border-white/5 bg-zinc-900/30 flex flex-col items-center justify-center z-10 backdrop-blur-sm gap-8">
+          {isDrawingRound && !submitted && roundAspect && (
+            <ToolPicker currentTool={tool} onSelect={setTool} onPin={handlePinTool} pinnedIds={pinnedTools} />
+          )}
+        </div>
+
+      </main>
+    </div>
+  );
+}
+
+----------------------------------------
+FILE: src\pages\Home.jsx
+----------------------------------------
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { auth, db } from '../firebase';
+import { signInAnonymously } from 'firebase/auth';
+import { ref, update, get } from 'firebase/database'; // Added 'get'
+import { generateRoomCode } from '../utils';
+
+function Home() {
+  const [name, setName] = useState("");
+  const [roomCode, setRoomCode] = useState("");
+  const navigate = useNavigate();
+
+  const enterRoom = async (code, isCreating = false) => {
+    if (!name.trim()) return alert("Please enter a nickname!");
+    
+    try {
+      const userCredential = await signInAnonymously(auth);
+      const userId = userCredential.user.uid;
+
+      const updates = {};
+      
+      // 1. Add Player
+      updates[`rooms/${code}/players/${userId}`] = {
+        name: name,
+        id: userId,
+        avatar: name.charAt(0).toUpperCase(),
+        joinedAt: Date.now()
+      };
+
+      // 2. If Creating, FORCE RESET the room state
+      // This ensures we don't join a "zombie" room that is stuck in PLAYING
+      if (isCreating) {
+        updates[`rooms/${code}/status`] = "LOBBY";
+        updates[`rooms/${code}/round`] = 0;
+        updates[`rooms/${code}/settings`] = {
+            timerMode: "MANUAL",
+            baseTime: 60,
+            startMode: "WRITE",
+            ghostMode: true
+        };
+        // Clear any old books/timer
+        updates[`rooms/${code}/books`] = null;
+        updates[`rooms/${code}/timerEnd`] = null;
+      }
+
+      await update(ref(db), updates);
+      navigate(`/room/${code}`);
+    } catch (error) {
+      console.error(error);
+      alert("Error: " + error.message);
+    }
+  };
+
+  const handleCreate = async () => {
+    const newCode = generateRoomCode();
+    await enterRoom(newCode, true); // Pass true for isCreating
+  };
+
+  const handleJoin = async () => {
+    if (roomCode.length !== 4) return alert("Invalid room code!");
+    // For joiners, we just enter (isCreating = false)
+    await enterRoom(roomCode.toUpperCase(), false);
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="glass-panel p-10 rounded-3xl max-w-md w-full relative overflow-hidden">
+        
+        {/* Decorative Top Line */}
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 to-blue-600 opacity-50"></div>
+
+        <h1 className="text-4xl font-black text-center mb-10 tracking-tighter">
+          THIRD<span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">THING</span>
+          <br /><span className="text-xl font-light tracking-[0.5em] text-gray-400">INJAPAN</span>
+        </h1>
+
+        <div className="space-y-6">
+          <div>
+            <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">Your Name</label>
+            <input 
+              type="text" 
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="glass-input w-full p-4 rounded-xl font-bold text-lg text-center"
+              placeholder="ENTER NAME"
+            />
+          </div>
+
+          <button 
+            onClick={handleCreate}
+            className="glass-button-primary w-full py-4 rounded-xl transition transform hover:scale-[1.02]"
+          >
+            CREATE NEW ROOM
+          </button>
+          
+          <div className="flex items-center gap-4 opacity-50">
+            <div className="h-px bg-white/20 flex-1"></div>
+            <span className="text-xs uppercase tracking-widest">OR</span>
+            <div className="h-px bg-white/20 flex-1"></div>
+          </div>
+
+          <div className="flex gap-3">
+            <input 
+              type="text" 
+              value={roomCode}
+              onChange={(e) => setRoomCode(e.target.value)}
+              className="glass-input flex-1 p-4 rounded-xl font-mono text-center uppercase text-xl tracking-widest"
+              placeholder="CODE"
+              maxLength={4}
+            />
+            <button 
+              onClick={handleJoin}
+              className="glass-button px-8 rounded-xl"
+            >
+              JOIN
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default Home;
+
+----------------------------------------
+FILE: src\pages\Lobby.jsx
+----------------------------------------
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { db, auth } from '../firebase';
+import { ref, onValue, set, update, remove } from 'firebase/database';
+import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import Game from './Game';
+import Gallery from './Gallery';
+import { usePresence } from '../hooks/usePresence';
+
+const DEFAULT_SETTINGS = {
+  timerMode: "MANUAL",
+  baseTime: 60,
+  startMode: "WRITE",
+  ghostMode: true
+};
+
+function Lobby() {
+  const { roomId } = useParams();
+  
+  const [players, setPlayers] = useState([]);
+  const [gameStatus, setGameStatus] = useState("LOBBY");
+  const [currentUser, setCurrentUser] = useState(null);
+  const [needsToJoin, setNeedsToJoin] = useState(true);
+  const [name, setName] = useState("");
+  const [showSettings, setShowSettings] = useState(true);
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [copied, setCopied] = useState(false);
+
+  usePresence(roomId, auth.currentUser?.uid);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) setCurrentUser(user);
+      else signInAnonymously(auth);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const playersRef = ref(db, `rooms/${roomId}/players`);
+    const unsubPlayers = onValue(playersRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const playerList = Object.values(data);
+        playerList.sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0));
+        setPlayers(playerList);
+        if (auth.currentUser) {
+          const isHere = playerList.some(p => p.id === auth.currentUser.uid);
+          setNeedsToJoin(!isHere);
+        }
+      } else {
+        setPlayers([]);
+        setNeedsToJoin(true);
+      }
+    });
+
+    const statusRef = ref(db, `rooms/${roomId}/status`);
+    const unsubStatus = onValue(statusRef, (snapshot) => {
+      const status = snapshot.val();
+      setGameStatus(status || "LOBBY"); // <--- The Fix
+    });
+
+    const settingsRef = ref(db, `rooms/${roomId}/settings`);
+    const unsubSettings = onValue(settingsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setSettings(prev => ({ ...DEFAULT_SETTINGS, ...snapshot.val() }));
+      }
+    });
+
+    return () => { unsubPlayers(); unsubStatus(); unsubSettings(); };
+  }, [roomId, currentUser]);
+
+  const handleJoin = async () => {
+    if (!name.trim()) return alert("Name required!");
+    let uid = auth.currentUser?.uid;
+    if (!uid) {
+      const cred = await signInAnonymously(auth);
+      uid = cred.user.uid;
+    }
+    const playerRef = ref(db, `rooms/${roomId}/players/${uid}`);
+    await set(playerRef, {
+      name: name,
+      id: uid,
+      avatar: name.charAt(0).toUpperCase(),
+      joinedAt: Date.now()
+    });
+  };
+
+  const isHost = players.length > 0 && auth.currentUser && players[0].id === auth.currentUser.uid;
+
+  const updateSetting = (key, value) => {
+      if (!isHost) return;
+      update(ref(db, `rooms/${roomId}/settings`), { [key]: value });
+  };
+
+  const handleKick = (playerId) => {
+    if (!confirm("Kick this player?")) return;
+    remove(ref(db, `rooms/${roomId}/players/${playerId}`));
+  };
+
+  const handleStartGame = async () => {
+    if (players.length < 2) return alert("Need at least 2 players!");
+    const shuffled = [...players].sort(() => Math.random() - 0.5);
+    const order = shuffled.map(p => p.id);
+    const initialBooks = {};
+    players.forEach(p => { initialBooks[p.id] = true; });
+
+    const updates = {};
+    updates[`rooms/${roomId}/status`] = "PLAYING";
+    updates[`rooms/${roomId}/round`] = 0;
+    updates[`rooms/${roomId}/playerOrder`] = order;
+    updates[`rooms/${roomId}/books`] = initialBooks;
+    
+    // --- FIX: CLEAR SUBMITTED STATUS FOR ALL PLAYERS ---
+    players.forEach(p => {
+        updates[`rooms/${roomId}/players/${p.id}/submitted`] = null;
+    });
+
+    if (settings.timerMode === "DYNAMIC") {
+        updates[`rooms/${roomId}/timerEnd`] = Date.now() + ((settings.baseTime || 60) * 1000);
+    } else {
+        updates[`rooms/${roomId}/timerEnd`] = null;
+    }
+
+    await update(ref(db), updates);
+  };
+
+  const handleResetGame = async () => {
+    if (!isHost) return;
+    
+    const updates = {};
+    updates[`rooms/${roomId}/status`] = "LOBBY";
+    updates[`rooms/${roomId}/round`] = 0;
+    updates[`rooms/${roomId}/timerEnd`] = null;
+    updates[`rooms/${roomId}/books`] = null;
+    
+    // --- FIX: CLEAR SUBMITTED STATUS HERE TOO ---
+    players.forEach(p => {
+        updates[`rooms/${roomId}/players/${p.id}/submitted`] = null;
+    });
+    
+    await update(ref(db), updates);
+  };
+
+  const copyLink = () => {
+      navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+  };
+
+
+  if (needsToJoin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="glass-panel p-8 rounded-2xl max-w-md w-full text-center">
+          <h2 className="text-sm font-bold text-gray-400 mb-2 uppercase tracking-widest">Join Room</h2>
+          <h3 className="text-3xl font-mono text-green-400 mb-8">{roomId}</h3>
+          <input 
+            type="text" 
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="glass-input w-full p-4 mb-4 text-center text-lg font-bold rounded-xl"
+            placeholder="ENTER NICKNAME"
+          />
+          <button onClick={handleJoin} className="glass-button-primary w-full py-4 rounded-xl font-bold">
+            JOIN GAME
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (gameStatus === "GALLERY") {
+    return (
+      <Gallery 
+        roomId={roomId} 
+        players={players} 
+        currentUser={currentUser}
+        onExit={handleResetGame} 
+      />
+    );
+  }
+
+  if (gameStatus === "PLAYING") {
+    return <Game roomId={roomId} players={players} currentUser={currentUser} settings={settings} />;
+  }
+
+  return (
+    <div className="min-h-screen p-8 flex flex-col items-center">
+      <div className="max-w-5xl w-full">
+        
+        <div className="text-center mb-12">
+          <div className="inline-block glass-panel px-6 py-2 rounded-full mb-4">
+            <span className="text-xs font-bold text-gray-500 tracking-[0.3em]">LOBBY</span>
+          </div>
+          
+          <div className="relative inline-block group cursor-pointer" onClick={copyLink}>
+              <h1 className="text-7xl font-black text-white tracking-tighter drop-shadow-2xl transition-all group-hover:text-green-400">
+                  {roomId}
+              </h1>
+              <div className="absolute top-0 -right-12 h-full flex items-center opacity-0 transform -translate-x-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
+                  <div className="bg-white/10 p-2 rounded-lg backdrop-blur-md border border-white/20">
+                      {copied ? <span className="text-green-400 font-bold text-xs">COPIED</span> : <span className="text-white text-xs">COPY</span>}
+                  </div>
+              </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+          {players.map((player, index) => (
+            <div key={player.id || index} className={`glass-panel p-6 rounded-2xl flex flex-col items-center transition-all relative group ${player.presence?.state === 'offline' ? 'opacity-50 border-red-500/30' : 'hover:bg-white/5'}`}>
+              
+              {isHost && player.id !== currentUser.uid && (
+                <button 
+                    onClick={(e) => { e.stopPropagation(); handleKick(player.id); }}
+                    className="absolute top-2 right-2 w-6 h-6 bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white rounded-full flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+                    title="Kick Player"
+                >
+                    ×
+                </button>
+              )}
+
+              <div className={`w-20 h-20 rounded-full flex items-center justify-center text-3xl font-black mb-4 shadow-inner ${player.presence?.state === 'offline' ? 'bg-red-500/20 text-red-400' : 'bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-blue-300'}`}>
+                {player.avatar}
+              </div>
+              <h3 className="font-bold text-lg tracking-wide">{player.name}</h3>
+              
+              {player.presence?.state === 'offline' && <span className="text-xs text-red-500 font-bold mt-2 px-2 py-1 bg-red-500/10 rounded">DISCONNECTED</span>}
+              {player.id === auth.currentUser?.uid && <span className="text-xs text-green-400 mt-2 font-mono">[YOU]</span>}
+              {players[0].id === player.id && <span className="text-xs text-yellow-500 mt-2 font-mono">[HOST]</span>}
+            </div>
+          ))}
+        </div>
+
+        <div className="glass-panel rounded-2xl mb-12 max-w-3xl mx-auto text-left relative overflow-hidden transition-all duration-300">
+            <div 
+                onClick={() => setShowSettings(!showSettings)}
+                className="p-6 flex justify-between items-center cursor-pointer hover:bg-white/5"
+            >
+                <h3 className="text-lg font-bold text-white">
+                    Game Settings {isHost ? "" : "(View Only)"}
+                </h3>
+                <span className={`text-gray-400 transition-transform duration-300 ${showSettings ? 'rotate-180' : ''}`}>▼</span>
+            </div>
+
+            <div className={`px-6 pb-6 transition-all duration-300 overflow-hidden ${showSettings ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-4 border-t border-white/10">
+                    
+                    <div>
+                    <label className="block text-xs text-gray-400 font-bold mb-3 uppercase">Timer Mode</label>
+                    <div className="flex flex-col gap-2">
+                        {["MANUAL", "DYNAMIC"].map(mode => (
+                             <button key={mode} disabled={!isHost} onClick={() => updateSetting("timerMode", mode)}
+                                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all border ${settings.timerMode === mode ? "bg-green-500/20 border-green-500 text-green-300" : "bg-white/5 border-white/5 text-gray-400 hover:bg-white/10"}`}>
+                                {mode === "MANUAL" ? "Manual (No Limit)" : "Dynamic Speed"}
+                            </button>
+                        ))}
+                        {settings.timerMode === "DYNAMIC" && (
+                            <div className="mt-2">
+                                <label className="text-[10px] text-gray-500 uppercase font-bold">Base Seconds</label>
+                                <input type="number" disabled={!isHost} value={settings.baseTime || 60}
+                                    onChange={(e) => updateSetting("baseTime", parseInt(e.target.value) || 60)}
+                                    className="glass-input w-full p-2 text-center font-bold text-sm rounded mt-1" />
+                            </div>
+                        )}
+                    </div>
+                    </div>
+
+                    <div>
+                    <label className="block text-xs text-gray-400 font-bold mb-3 uppercase">First Round</label>
+                    <div className="flex flex-col gap-2">
+                        <button disabled={!isHost} onClick={() => updateSetting("startMode", "WRITE")}
+                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all border ${settings.startMode === "WRITE" ? "bg-blue-500/20 border-blue-500 text-blue-300" : "bg-white/5 border-white/5 text-gray-400 hover:bg-white/10"}`}>
+                            Write a Prompt
+                        </button>
+                        <button disabled={!isHost} onClick={() => updateSetting("startMode", "DRAW")}
+                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all border ${settings.startMode === "DRAW" ? "bg-purple-500/20 border-purple-500 text-purple-300" : "bg-white/5 border-white/5 text-gray-400 hover:bg-white/10"}`}>
+                            Draw Anything
+                        </button>
+                    </div>
+                    </div>
+
+                    <div>
+                    <label className="block text-xs text-gray-400 font-bold mb-3 uppercase">Anonymity</label>
+                    <button disabled={!isHost} onClick={() => updateSetting("ghostMode", !settings.ghostMode)}
+                        className={`w-full py-3 rounded-lg text-sm font-bold transition-all border flex items-center justify-center gap-2 ${settings.ghostMode ? "bg-gray-700/50 border-gray-500 text-gray-200" : "bg-white/5 border-white/5 text-gray-500 hover:bg-white/10"}`}>
+                        {settings.ghostMode ? "Names Hidden" : "Names Visible"}
+                    </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div className="text-center pb-20">
+          {isHost ? (
+            <button 
+              onClick={handleStartGame}
+              className="btn-satisfying px-20 py-8 text-2xl shadow-2xl"
+            >
+              START GAME
+            </button>
+          ) : (
+            <div className="flex flex-col items-center gap-2 opacity-50 animate-pulse">
+               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+               <span className="text-xs tracking-widest uppercase">Waiting for Host...</span>
+            </div>
+          )}
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+export default Lobby;
+
+----------------------------------------
+FILE: src\utils\dynamicBrush.js
+----------------------------------------
+import { fabric } from 'fabric';
+
+/**
+ * Velocity-based Calligraphy Brush
+ * Creates a "filled shape" path instead of a stroke.
+ */
+export const createDynamicBrush = (canvas) => {
+  // 1. Force attach canvas immediately
+  const brush = new fabric.BaseBrush(canvas);
+  brush.canvas = canvas;
+
+  brush.points = [];
+  brush.width = 10;
+  brush.color = '#000000';
+  brush.lastTime = 0;
+
+  // Configuration
+  const MIN_WIDTH_RATIO = 0.2; 
+  const MAX_VELOCITY = 3;      
+  const SMOOTHING = 0.5;       
+
+  brush.onMouseDown = function (pointer) {
+    this.points = [];
+    this.lastTime = Date.now();
+    // Safety check: Ensure freeDrawingBrush exists before accessing properties
+    if (this.canvas.freeDrawingBrush) {
+        this.width = this.canvas.freeDrawingBrush.width || 10;
+        this.color = this.canvas.freeDrawingBrush.color || '#000000';
+    } else {
+        this.width = 10;
+        this.color = '#000000';
+    }
+    
+    this.addPoint(pointer);
+  };
+
+  brush.onMouseMove = function (pointer) {
+    this.addPoint(pointer);
+    this.render();
+  };
+
+  brush.onMouseUp = function () {
+    const pathData = this.getSVGPath();
+    if (!pathData) return;
+
+    // 1. Create the final object
+    const path = new fabric.Path(pathData, {
+      fill: this.color,
+      stroke: null,
+      strokeWidth: 0,
+      objectCaching: false, 
+      perPixelTargetFind: true, // <--- ADD THIS! Precision Mode enabled.
+    });
+
+    // 2. Add to main canvas
+    this.canvas.add(path);
+    this.canvas.fire('path:created', { path: path });
+
+    // 3. Clear the temporary "ghost" layer
+    this.canvas.clearContext(this.canvas.contextTop);
+
+    // 4. Reset points
+    this.points = [];
+  };
+
+  brush.addPoint = function (pointer) {
+    const time = Date.now();
+    // Use pointer if points is empty
+    const lastPoint = this.points.length > 0 ? this.points[this.points.length - 1] : { ...pointer, w: this.width };
+    
+    const dist = Math.sqrt(
+      Math.pow(pointer.x - lastPoint.x, 2) + Math.pow(pointer.y - lastPoint.y, 2)
+    );
+
+    const timeDiff = time - this.lastTime;
+    const velocity = timeDiff > 0 ? dist / timeDiff : 0;
+    
+    const velocityFactor = Math.min(velocity / MAX_VELOCITY, 1);
+    const targetWidth = this.width * (1 - (velocityFactor * (1 - MIN_WIDTH_RATIO)));
+
+    const smoothedWidth = this.points.length > 0 
+      ? lastPoint.w * SMOOTHING + targetWidth * (1 - SMOOTHING)
+      : targetWidth;
+
+    this.points.push({ x: pointer.x, y: pointer.y, w: smoothedWidth });
+    this.lastTime = time;
+  };
+
+  brush.getSVGPath = function () {
+    if (this.points.length < 2) return '';
+
+    let leftPts = [];
+    let rightPts = [];
+
+    for (let i = 0; i < this.points.length - 1; i++) {
+      const p1 = this.points[i];
+      const p2 = this.points[i + 1];
+
+      const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+      const perp = angle + Math.PI / 2;
+
+      const r = p1.w / 2;
+      
+      leftPts.push({
+        x: p1.x + Math.cos(perp) * r,
+        y: p1.y + Math.sin(perp) * r
+      });
+      
+      rightPts.push({
+        x: p1.x - Math.cos(perp) * r,
+        y: p1.y - Math.sin(perp) * r
+      });
+    }
+
+    const last = this.points[this.points.length - 1];
+    leftPts.push(last);
+    rightPts.push(last);
+
+    let d = `M ${leftPts[0].x} ${leftPts[0].y} `;
+
+    for (let i = 1; i < leftPts.length; i++) {
+      d += `L ${leftPts[i].x} ${leftPts[i].y} `;
+    }
+
+    for (let i = rightPts.length - 1; i >= 0; i--) {
+      d += `L ${rightPts[i].x} ${rightPts[i].y} `;
+    }
+
+    d += 'Z'; 
+    return d;
+  };
+
+  brush.render = function () {
+    // 2. CRITICAL SAFETY CHECK
+    // If contextTop is missing (can happen during dismount/resize), abort render
+    if (!this.canvas || !this.canvas.contextTop) return;
+    
+    const ctx = this.canvas.contextTop;
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    
+    if (this.points.length > 0) {
+      const p = this.points[this.points.length - 1];
+      ctx.arc(p.x, p.y, p.w / 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  };
+
+  return brush;
+};
+
+----------------------------------------
+FILE: src\utils\geometry.js
+----------------------------------------
+// src/utils/geometry.js
+
+// --- CONSTANTS ---
+export const PI = Math.PI;
+export const TWO_PI = Math.PI * 2;
+
+// --- POLAR/CARTESIAN HELPERS ---
+export const polarToCartesian = (cx, cy, r, theta) => {
+  return {
+    x: cx + r * Math.cos(theta),
+    y: cy + r * Math.sin(theta),
+  };
+};
+
+export const cartesianToPolar = (cx, cy, x, y) => {
+  const dx = x - cx;
+  const dy = y - cy;
+  return {
+    r: Math.sqrt(dx * dx + dy * dy),
+    theta: Math.atan2(dy, dx),
+  };
+};
+
+export const normalizeAngle = (angle) => {
+  let a = angle % TWO_PI;
+  if (a < 0) a += TWO_PI;
+  return a;
+};
+
+export const dist = (p1, p2) => {
+  return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+};
+
+// --- COLOR HELPERS ---
+export const hslaToString = (c) => {
+  return `hsla(${c.h.toFixed(1)}, ${c.s.toFixed(1)}%, ${c.l.toFixed(1)}%, ${c.a.toFixed(2)})`;
+};
+
+// --- MATH UTILS ---
+export const mapRange = (value, inMin, inMax, outMin, outMax) => {
+  return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
+};
+
+export const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
+
+export const noise = (angle, time, frequency = 1) => {
+  const t = time * 0.5;
+  return (
+    Math.sin(angle * frequency + t) * 0.5 +
+    Math.sin(angle * frequency * 2 + t * 1.5) * 0.25 +
+    Math.sin(angle * frequency * 3 - t * 0.8) * 0.125
+  );
+};
+
+// --- SYMMETRY REFLECTION (The new logic) ---
+export const reflectPoint = (p, line) => {
+  if (!line) return p;
+  
+  // Translate to origin
+  const dx = p.x - line.x;
+  const dy = p.y - line.y;
+  
+  // Rotate to horizontal
+  const rad = (line.angle * Math.PI) / 180;
+  const cos = Math.cos(-rad);
+  const sin = Math.sin(-rad);
+  const rx = dx * cos - dy * sin;
+  const ry = dx * sin + dy * cos;
+  
+  // Reflect across X (flip Y)
+  const ry_ref = -ry;
+  
+  // Rotate back
+  const cos_b = Math.cos(rad);
+  const sin_b = Math.sin(rad);
+  const finalX = rx * cos_b - ry_ref * sin_b + line.x;
+  const finalY = rx * sin_b + ry_ref * cos_b + line.y;
+  
+  return { x: finalX, y: finalY };
+};
+
+----------------------------------------
+FILE: src\utils\math.js
+----------------------------------------
+// src/utils/math.js
+
+export const PI = Math.PI;
+export const TWO_PI = Math.PI * 2;
+
+export const polarToCartesian = (cx, cy, r, theta) => {
+  return {
+    x: cx + r * Math.cos(theta),
+    y: cy + r * Math.sin(theta),
+  };
+};
+
+export const cartesianToPolar = (cx, cy, x, y) => {
+  const dx = x - cx;
+  const dy = y - cy;
+  return {
+    r: Math.sqrt(dx * dx + dy * dy),
+    theta: Math.atan2(dy, dx),
+  };
+};
+
+export const normalizeAngle = (angle) => {
+  let a = angle % TWO_PI;
+  if (a < 0) a += TWO_PI;
+  return a;
+};
+
+export const hslaToString = (c) => {
+  return `hsla(${c.h.toFixed(1)}, ${c.s.toFixed(1)}%, ${c.l.toFixed(1)}%, ${c.a.toFixed(2)})`;
+};
+
+// Pseudo-noise function
+export const noise = (angle, time, frequency = 1) => {
+  const t = time * 0.5;
+  return (
+    Math.sin(angle * frequency + t) * 0.5 +
+    Math.sin(angle * frequency * 2 + t * 1.5) * 0.25 +
+    Math.sin(angle * frequency * 3 - t * 0.8) * 0.125
+  );
+};
+
+export const mapRange = (value, inMin, inMax, outMin, outMax) => {
+  return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
+};
+
+export const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
+
+export const dist = (p1, p2) => {
+  return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+};
+
